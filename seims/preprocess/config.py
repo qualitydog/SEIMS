@@ -20,16 +20,16 @@ class SEIMSConfig(object):
 
     def __init__(self, cf):
         # 1. Directories
-        self.base_dir = None
-        self.clim_dir = None
-        self.spatial_dir = None
-        self.observe_dir = None
+        self.base_dir = r'D:\SEIMS\data\dianbu\data_prepare'
+        self.clim_dir = r'D:\SEIMS\data\dianbu\data_prepare\spatial'
+        self.spatial_dir = r'D:\SEIMS\data\dianbu\data_prepare\climate'
+        self.observe_dir = r'D:\SEIMS\data\dianbu\data_prepare\observed'
         self.scenario_dir = None
-        self.model_dir = None
-        self.txt_db_dir = None
-        self.preproc_script_dir = None
-        self.seims_bin = None
-        self.mpi_bin = None
+        self.model_dir = r'D:\SEIMS'
+        self.txt_db_dir = r'D:\SEIMS\seims\preprocess\database'
+        self.preproc_script_dir = r'D:\SEIMS\seims\preprocess'
+        self.seims_bin = r'D:\SEIMS\seims\bin'
+        self.mpi_bin = r'C:\Program Files\Microsoft MPI\Bin'
         self.workspace = None
         # 1.1. Directory determined flags
         self.use_observed = True
