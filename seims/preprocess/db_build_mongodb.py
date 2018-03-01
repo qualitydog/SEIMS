@@ -6,21 +6,22 @@
                 17-06-26  lj - reformat according to pylint and google style
                 17-07-07  lj - remove sqlite3 database file as intermediate data
 """
-from os import sep as SEP
+import os
 
-from seims.preprocess.bmp_import_scenario import ImportScenario2Mongo
-from seims.preprocess.db_import_interpolation_weights import ImportWeightData
-from seims.preprocess.db_import_meteorology import ImportMeteoData
-from seims.preprocess.db_import_model_parameters import ImportParam2Mongo
-from seims.preprocess.db_import_observed import ImportObservedData
-from seims.preprocess.db_import_precipitation import ImportPrecipitation
-from seims.preprocess.db_import_sites import ImportHydroClimateSites
-from seims.preprocess.db_import_stream_parameters import ImportReaches2Mongo
-from seims.preprocess.db_mongodb import ConnectMongoDB, MongoQuery
-from seims.preprocess.sp_extraction import extract_spatial_parameters
-from seims.preprocess.text import DBTableNames
-from seims.preprocess.utility import status_output
-from seims.pygeoc.pygeoc.utils.utils import UtilClass
+from pygeoc.utils import UtilClass
+
+from bmp_import_scenario import ImportScenario2Mongo
+from db_import_interpolation_weights import ImportWeightData
+from db_import_meteorology import ImportMeteoData
+from db_import_model_parameters import ImportParam2Mongo
+from db_import_observed import ImportObservedData
+from db_import_precipitation import ImportPrecipitation
+from db_import_sites import ImportHydroClimateSites
+from db_import_stream_parameters import ImportReaches2Mongo
+from db_mongodb import ConnectMongoDB, MongoQuery
+from sp_extraction import extract_spatial_parameters
+from text import DBTableNames, SubbsnStatsName
+from utility import status_output
 
 
 class ImportMongodbClass(object):
@@ -40,7 +41,6 @@ class ImportMongodbClass(object):
     @staticmethod
     def spatial_rasters(cfg, subbasin_num):
         """Import spatial raster data."""
-        UtilClass.mkdir(cfg.dirs.import2db)
         if not cfg.cluster:  # changed by LJ, SubbasinID is 0 means the whole basin!
             subbasin_num = 0
             start_id = 0
@@ -48,15 +48,17 @@ class ImportMongodbClass(object):
         else:
             start_id = 1
             subbasin_file = cfg.spatials.subbsn
-        for i in range(start_id, subbasin_num + 1):
-            subdir = cfg.dirs.import2db + SEP + str(i)
-            UtilClass.rmmkdir(subdir)
-        str_cmd = '"%s/import_raster" %s %s %s %s %s %d %s' % (cfg.seims_bin, subbasin_file,
+        str_cmd = '"%s/import_raster" %s %s %s %s %s %d' % (cfg.seims_bin, subbasin_file,
                                                                cfg.dirs.geodata2db,
                                                                cfg.spatial_db,
                                                                DBTableNames.gridfs_spatial,
-                                                               cfg.hostname, cfg.port,
-                                                               cfg.dirs.import2db)
+                                                               cfg.hostname, cfg.port)
+        if cfg.cluster:
+            UtilClass.mkdir(cfg.dirs.import2db)
+            for i in range(start_id, subbasin_num + 1):
+                subdir = cfg.dirs.import2db + os.sep + str(i)
+                UtilClass.rmmkdir(subdir)
+            str_cmd = '%s %s' % (str_cmd, cfg.dirs.import2db)
         # print (str_cmd)
         UtilClass.run_command(str_cmd)
 
@@ -90,7 +92,7 @@ class ImportMongodbClass(object):
     @staticmethod
     def workflow(cfg):
         """Building MongoDB workflow"""
-        f = open(cfg.logs.build_mongo, 'w')
+        f = cfg.logs.build_mongo
         # build a connection to mongodb database
         client = ConnectMongoDB(cfg.hostname, cfg.port)
         conn = client.get_conn()
@@ -103,8 +105,8 @@ class ImportMongodbClass(object):
         # import model parameters information to MongoDB
         status_output('Import model parameters', 10, f)
         ImportParam2Mongo.workflow(cfg, maindb)
-        n_subbasins = MongoQuery.get_subbasin_num(maindb)
-        print ('Number of subbasins:%d' % n_subbasins)
+        n_subbasins = MongoQuery.get_init_parameter_value(maindb, SubbsnStatsName.subbsn_num)
+        print ('Number of subbasins: %d' % n_subbasins)
 
         # Extract spatial parameters for reaches, landuse, soil, etc.
         status_output('Extract spatial parameters for reaches, landuse, soil, etc...', 20, f)
@@ -137,14 +139,13 @@ class ImportMongodbClass(object):
 
         # Measurement Data, such as discharge, sediment yield.
         status_output('Import observed data, such as discharge, sediment yield....', 90, f)
-        ImportObservedData.workflow(cfg, climatedb)
+        ImportObservedData.workflow(cfg, maindb, climatedb)
 
         # Import BMP scenario database to MongoDB
         status_output('Importing bmp scenario....', 95, f)
         ImportScenario2Mongo.scenario_from_texts(cfg, maindb, scenariodb)
 
         status_output('Build DB: %s finished!' % cfg.spatial_db, 100, f)
-        f.close()
 
         # close connection to MongoDB
         client.close()
@@ -152,7 +153,7 @@ class ImportMongodbClass(object):
 
 def main():
     """TEST CODE"""
-    from seims.preprocess.config import parse_ini_configuration
+    from config import parse_ini_configuration
     seims_cfg = parse_ini_configuration()
 
     ImportMongodbClass.workflow(seims_cfg)

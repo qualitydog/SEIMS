@@ -6,7 +6,9 @@
  * \date June 2010
  *
  */
-#pragma once
+#ifndef SEIMS_PARAMETER_INFO_H
+#define SEIMS_PARAMETER_INFO_H
+
 #include "MetadataInfoConst.h"
 #include "text.h"
 #include "utilities.h"
@@ -25,13 +27,10 @@ using namespace std;
 class ParamInfo {
 public:
     //! Construct an empty instance.
-    ParamInfo(void);
+    ParamInfo();
 
     //! Destructor
-    ~ParamInfo(void);
-
-    //! Reset the contents of the object to default values
-    void Reset(void);
+    ~ParamInfo() = default;
 
     /*!
      * \brief Return the adjusted value for this parameter
@@ -47,11 +46,19 @@ public:
     //! Adjust 1D Raster, \sa Adjust1DArray()
     void Adjust1DRaster(int n, float *data);
 
+    //! Adjust 1D Raster on selected area
+    void Adjust1DRaster(int n, float *data, const float *units, vector<int> selunits,
+                        const float *lu, vector<int> sellu);
+
     //! Adjust 2D array
     void Adjust2DArray(int n, float **data);
 
     //! Adjust 2D Raster
     void Adjust2DRaster(int n, int lyr, float **data);
+
+    //! Adjust 1D Raster on selected area
+    void Adjust2DRaster(int n, int lyr, float **data, float *units, vector<int> selunits,
+                        float *lu, vector<int> sellu);
 
     //! Name
     string Name;
@@ -75,8 +82,8 @@ public:
     float Maximum;
     //! Absolute minimum value
     float Minimun;
-    //! Use or not
-    string Use;
+    ////! Use or not, deprecated by lj, 08/16/17
+    //string Use;
     //! Dependence parameters
     ParamInfo *DependPara;
     //! Climate type
@@ -92,3 +99,5 @@ public:
     //! whether is initialized
     bool initialized;
 };
+
+#endif /* SEIMS_PARAMETER_INFO_H */

@@ -3,49 +3,45 @@
 
 using namespace std;
 
-SEDR_SBAGNOLD::SEDR_SBAGNOLD(void) : m_dt(-1), m_nreach(-1), m_sedtoCh(NULL), m_Chs0(NODATA_VALUE),
-                                     m_sedChi0(NODATA_VALUE),
-                                     m_ptSub(NULL), m_chStorage(NULL), m_preChStorage(NULL), m_sedOut(NULL), m_VCD(-1),
-                                     m_reachDownStream(NULL), m_chOrder(NULL), m_chWidth(NULL),
-                                     m_chLen(NULL), m_chDepth(NULL), m_chVel(NULL), m_chSlope(NULL), m_chCover(NULL), m_chErod(NULL),
-                                     m_qchOut(NULL),
-                                     m_prf(NODATA_VALUE), m_spcon(NODATA_VALUE), m_spexp(NODATA_VALUE),
-                                     m_vcrit(NODATA_VALUE),
-                                     m_sedStorage(NULL), m_sedDep(NULL), m_sedDeg(NULL), m_sedConc(NULL),
-                                     m_rchSand(NULL), m_rchSilt(NULL), m_rchClay(NULL), m_rchSag(NULL), m_rchLag(NULL),
-                                     m_rchGra(NULL),
-                                     m_rchBankEro(NULL), m_rchDeg(NULL), m_rchDep(NULL), m_flplainDep(NULL) {
+SEDR_SBAGNOLD::SEDR_SBAGNOLD() : m_dt(-1), m_nreach(-1), m_layeringMethod(UP_DOWN), m_sedtoCh(nullptr), m_Chs0(NODATA_VALUE),
+                                 m_sedChi0(NODATA_VALUE),
+                                 m_ptSub(nullptr), m_chStorage(nullptr), m_preChStorage(nullptr),
+                                 m_sedOut(nullptr), m_VCD(-1),
+                                 m_reachDownStream(nullptr), m_chOrder(nullptr), m_chWidth(nullptr),
+                                 m_chLen(nullptr), m_chDepth(nullptr), m_chVel(nullptr), m_chSlope(nullptr),
+                                 m_chCover(nullptr), m_chErod(nullptr),
+                                 m_qchOut(nullptr),
+                                 m_prf(NODATA_VALUE), m_spcon(NODATA_VALUE), m_spexp(NODATA_VALUE),
+                                 m_vcrit(NODATA_VALUE),
+                                 m_sedStorage(nullptr), m_sedDep(nullptr), m_sedDeg(nullptr), m_sedConc(nullptr),
+                                 m_rchSand(nullptr), m_rchSilt(nullptr), m_rchClay(nullptr),
+                                 m_rchSag(nullptr), m_rchLag(nullptr), m_rchGra(nullptr),
+                                 m_rchBankEro(nullptr), m_rchDeg(nullptr), m_rchDep(nullptr), m_flplainDep(nullptr) {
 }
 
-SEDR_SBAGNOLD::~SEDR_SBAGNOLD(void) {
-    if (m_reachDownStream != NULL) Release1DArray(m_reachDownStream);
-    if (m_chOrder != NULL) Release1DArray(m_chOrder);
-    if (m_chWidth != NULL) Release1DArray(m_chWidth);
-    if (m_chLen != NULL) Release1DArray(m_chLen);
-    if (m_chDepth != NULL) Release1DArray(m_chDepth);
-    if (m_chVel != NULL) Release1DArray(m_chVel);
-    if (m_chCover != NULL) Release1DArray(m_chCover);
-    if (m_chErod != NULL) Release1DArray(m_chErod);
-    if (m_ptSub != NULL) Release1DArray(m_ptSub);
-    if (m_sedOut != NULL) Release1DArray(m_sedOut);
-    if (m_sedConc != NULL) Release1DArray(m_sedConc);
-    if (m_sedStorage != NULL) Release1DArray(m_sedStorage);
-    if (m_sedDeg != NULL) Release1DArray(m_sedDeg);
-    if (m_sedDep != NULL) Release1DArray(m_sedDep);
+SEDR_SBAGNOLD::~SEDR_SBAGNOLD() {
+    /// reaches related variables will be released in ~clsReaches(). By lj, 2017-12-26.
 
-    if (m_rchSand != NULL) Release1DArray(m_rchSand);
-    if (m_rchSilt != NULL) Release1DArray(m_rchSilt);
-    if (m_rchClay != NULL) Release1DArray(m_rchClay);
-    if (m_rchSag != NULL) Release1DArray(m_rchSag);
-    if (m_rchLag != NULL) Release1DArray(m_rchLag);
-    if (m_rchGra != NULL) Release1DArray(m_rchGra);
-    if (m_rchBankEro != NULL) Release1DArray(m_rchBankEro);
-    if (m_rchDeg != NULL) Release1DArray(m_rchDeg);
-    if (m_rchDep != NULL) Release1DArray(m_rchDep);
-    if (m_flplainDep != NULL) Release1DArray(m_flplainDep);
+    if (nullptr != m_ptSub) Release1DArray(m_ptSub);
+    if (nullptr != m_sedOut) Release1DArray(m_sedOut);
+    if (nullptr != m_sedConc) Release1DArray(m_sedConc);
+    if (nullptr != m_sedStorage) Release1DArray(m_sedStorage);
+    if (nullptr != m_sedDeg) Release1DArray(m_sedDeg);
+    if (nullptr != m_sedDep) Release1DArray(m_sedDep);
+
+    if (nullptr != m_rchSand) Release1DArray(m_rchSand);
+    if (nullptr != m_rchSilt) Release1DArray(m_rchSilt);
+    if (nullptr != m_rchClay) Release1DArray(m_rchClay);
+    if (nullptr != m_rchSag) Release1DArray(m_rchSag);
+    if (nullptr != m_rchLag) Release1DArray(m_rchLag);
+    if (nullptr != m_rchGra) Release1DArray(m_rchGra);
+    if (nullptr != m_rchBankEro) Release1DArray(m_rchBankEro);
+    if (nullptr != m_rchDeg) Release1DArray(m_rchDeg);
+    if (nullptr != m_rchDep) Release1DArray(m_rchDep);
+    if (nullptr != m_flplainDep) Release1DArray(m_flplainDep);
 }
 
-bool SEDR_SBAGNOLD::CheckInputData(void) {
+bool SEDR_SBAGNOLD::CheckInputData() {
     if (m_dt < 0) {
         throw ModelException(MID_SEDR_SBAGNOLD, "CheckInputData", "The parameter: m_dt has not been set.");
     }
@@ -78,23 +74,23 @@ bool SEDR_SBAGNOLD::CheckInputData(void) {
         throw ModelException(MID_SEDR_SBAGNOLD, "CheckInputData", "The parameter: m_VCD must be 0 or 1.");
     }
 
-    if (m_sedtoCh == NULL) {
+    if (nullptr == m_sedtoCh) {
         throw ModelException(MID_SEDR_SBAGNOLD, "CheckInputData", "The parameter: m_sedtoCh has not been set.");
     }
 
-    if (m_chWidth == NULL) {
+    if (nullptr == m_chWidth) {
         throw ModelException(MID_SEDR_SBAGNOLD, "CheckInputData", "The parameter: ReachParameter has not been set.");
     }
 
-    if (m_chStorage == NULL) {
+    if (nullptr == m_chStorage) {
         throw ModelException(MID_SEDR_SBAGNOLD, "CheckInputData", "The parameter: m_chStorage has not been set.");
     }
 
-    if (m_chWTdepth == NULL) {
+    if (nullptr == m_chWTdepth) {
         throw ModelException(MID_SEDR_SBAGNOLD, "CheckInputData", "The parameter: m_chWTdepth has not been set.");
     }
 
-    if (m_qchOut == NULL) {
+    if (nullptr == m_qchOut) {
         throw ModelException(MID_SEDR_SBAGNOLD, "CheckInputData", "The parameter: m_qchOut has not been set.");
     }
 
@@ -116,7 +112,7 @@ void SEDR_SBAGNOLD::initialOutputs() {
     }
 
     //initial channel storage
-    if (m_sedOut == NULL) {
+    if (nullptr == m_sedOut) {
         Initialize1DArray(m_nreach + 1, m_sedOut, 0.f);
         Initialize1DArray(m_nreach + 1, m_sedConc, 0.f);
         Initialize1DArray(m_nreach + 1, m_sedStorage, 0.f);
@@ -140,19 +136,19 @@ void SEDR_SBAGNOLD::initialOutputs() {
         Initialize1DArray(m_nreach + 1, m_flplainDep, 0.f);
     }
     /// initialize point source loadings
-    if (m_ptSub == NULL) Initialize1DArray(m_nreach + 1, m_ptSub, 0.f);
+    if (nullptr == m_ptSub) Initialize1DArray(m_nreach + 1, m_ptSub, 0.f);
 }
 
 void SEDR_SBAGNOLD::PointSourceLoading() {
     /// load point source water discharge (m3/s) on current day from Scenario
-    for (map<int, BMPPointSrcFactory *>::iterator it = m_ptSrcFactory.begin(); it != m_ptSrcFactory.end(); it++) {
+    for (auto it = m_ptSrcFactory.begin(); it != m_ptSrcFactory.end(); it++) {
         //cout<<"unique Point Source Factory ID: "<<it->first<<endl;
         vector<int> m_ptSrcMgtSeqs = it->second->GetPointSrcMgtSeqs();
-        map < int, PointSourceMgtParams * > m_pointSrcMgtMap = it->second->GetPointSrcMgtMap();
+        map<int, PointSourceMgtParams *> m_pointSrcMgtMap = it->second->GetPointSrcMgtMap();
         vector<int> m_ptSrcIDs = it->second->GetPointSrcIDs();
-        map < int, PointSourceLocations * > m_pointSrcLocsMap = it->second->GetPointSrcLocsMap();
+        map<int, PointSourceLocations *> m_pointSrcLocsMap = it->second->GetPointSrcLocsMap();
         // 1. looking for management operations from m_pointSrcMgtMap
-        for (vector<int>::iterator seqIter = m_ptSrcMgtSeqs.begin(); seqIter != m_ptSrcMgtSeqs.end(); seqIter++) {
+        for (auto seqIter = m_ptSrcMgtSeqs.begin(); seqIter != m_ptSrcMgtSeqs.end(); seqIter++) {
             PointSourceMgtParams *curPtMgt = m_pointSrcMgtMap.at(*seqIter);
             // 1.1 If current day is beyond the date range, then continue to next management
             if (curPtMgt->GetStartDate() != 0 && curPtMgt->GetEndDate() != 0) {
@@ -163,7 +159,7 @@ void SEDR_SBAGNOLD::PointSourceLoading() {
             // 1.2 Otherwise, get the water volume
             float per_sed = curPtMgt->GetSedment(); /// g/cm3, or Mg/m3
             // 1.3 Sum up all point sources
-            for (vector<int>::iterator locIter = m_ptSrcIDs.begin(); locIter != m_ptSrcIDs.end(); locIter++) {
+            for (auto locIter = m_ptSrcIDs.begin(); locIter != m_ptSrcIDs.end(); locIter++) {
                 if (m_pointSrcLocsMap.find(*locIter) != m_pointSrcLocsMap.end()) {
                     PointSourceLocations *curPtLoc = m_pointSrcLocsMap.at(*locIter);
                     int curSubID = curPtLoc->GetSubbasinID();
@@ -181,16 +177,13 @@ int SEDR_SBAGNOLD::Execute() {
     initialOutputs();
     /// load point source water volume from m_ptSrcFactory
     PointSourceLoading();
-    map < int, vector < int > > ::iterator
-    it;
-    for (it = m_reachLayers.begin(); it != m_reachLayers.end(); it++) {
+    for (auto it = m_reachLayers.begin(); it != m_reachLayers.end(); it++) {
         // There are not any flow relationship within each routing layer.
         // So parallelization can be done here.
         int nReaches = it->second.size();
-        // the size of m_reachLayers (map) is equal to the maximum stream order
 #pragma omp parallel for
         for (int i = 0; i < nReaches; ++i) {
-            int reachIndex = it->second[i]; // index in the array
+            int reachIndex = it->second[i]; // index in the array, which is equal to reach ID
             SedChannelRouting(reachIndex);
             // compute changes in channel dimensions caused by downcutting and widening
             if (m_VCD) {
@@ -235,16 +228,18 @@ void SEDR_SBAGNOLD::SetValue(const char *key, float value) {
         SetOpenMPThread((int) value);
     }
 #ifdef STORM_MODE
-    else if (StringMatch(sk, Tag_ChannelTimeStep))
-    {
-        m_dt = (int) value;
-    }
+        else if (StringMatch(sk, Tag_ChannelTimeStep))
+        {
+            m_dt = (int) value;
+        }
 #else
     else if (StringMatch(sk, Tag_TimeStep)) {
         m_dt = (int) value;
     }
 #endif /* STORM_MODE */
-    else if (StringMatch(sk, VAR_P_RF)) {
+    else if (StringMatch(sk, Tag_LayeringMethod)) {
+        m_layeringMethod = (LayeringMethod) int(value);
+    } else if (StringMatch(sk, VAR_P_RF)) {
         m_prf = value;
     } else if (StringMatch(sk, VAR_SPCON)) {
         m_spcon = value;
@@ -314,9 +309,9 @@ void SEDR_SBAGNOLD::Get2DData(const char *key, int *nRows, int *nCols, float ***
 }
 
 void SEDR_SBAGNOLD::SetScenario(Scenario *sce) {
-    if (sce != NULL) {
+    if (nullptr != sce) {
         map<int, BMPFactory *> tmpBMPFactories = sce->GetBMPFactories();
-        for (map<int, BMPFactory *>::iterator it = tmpBMPFactories.begin(); it != tmpBMPFactories.end(); it++) {
+        for (auto it = tmpBMPFactories.begin(); it != tmpBMPFactories.end(); it++) {
             /// Key is uniqueBMPID, which is calculated by BMP_ID * 100000 + subScenario;
             if (it->first / 100000 == BMP_TYPE_POINTSOURCE) {
                 m_ptSrcFactory[it->first] = (BMPPointSrcFactory *) it->second;
@@ -328,46 +323,23 @@ void SEDR_SBAGNOLD::SetScenario(Scenario *sce) {
 }
 
 void SEDR_SBAGNOLD::SetReaches(clsReaches *reaches) {
-    if (reaches != NULL) {
-        m_nreach = reaches->GetReachNumber();
-        m_reachId = reaches->GetReachIDs();
-        if (m_reachDownStream == NULL) {
-            Initialize1DArray(m_nreach + 1, m_reachDownStream, 0.f);
-            Initialize1DArray(m_nreach + 1, m_chOrder, 0.f);
-            Initialize1DArray(m_nreach + 1, m_chWidth, 0.f);
-            Initialize1DArray(m_nreach + 1, m_chLen, 0.f);
-            Initialize1DArray(m_nreach + 1, m_chDepth, 0.f);
-            Initialize1DArray(m_nreach + 1, m_chVel, 0.f);
-            Initialize1DArray(m_nreach + 1, m_chSlope, 0.f);
-            Initialize1DArray(m_nreach + 1, m_chCover, 0.f);
-            Initialize1DArray(m_nreach + 1, m_chErod, 0.f);
-        }
-        for (vector<int>::iterator it = m_reachId.begin(); it != m_reachId.end(); it++) {
-            int i = *it;
-            clsReach *tmpReach = reaches->GetReachByID(i);
-            m_reachDownStream[i] = (float) tmpReach->GetDownStream();
-            m_chOrder[i] = (float) tmpReach->GetUpDownOrder();
-            m_chWidth[i] = (float) tmpReach->GetWidth();
-            m_chLen[i] = (float) tmpReach->GetLength();
-            m_chDepth[i] = (float) tmpReach->GetDepth();
-            m_chVel[i] = (float) tmpReach->GetV0();
-            m_chCover[i] = (float) tmpReach->GetCover();
-            m_chErod[i] = (float) tmpReach->GetErod();
-        }
-        m_reachUpStream.resize(m_nreach + 1);
-        if (m_nreach > 1) {
-            for (int i = 1; i <= m_nreach; i++)// index of the reach is the equal to streamlink ID(1 to nReaches)
-            {
-                int downStreamId = int(m_reachDownStream[i]);
-                if (downStreamId <= 0) {
-                    continue;
-                }
-                m_reachUpStream[downStreamId].push_back(i);
-            }
-        }
-    } else {
+    if (nullptr == reaches) {
         throw ModelException(MID_SEDR_SBAGNOLD, "SetReaches", "The reaches input can not to be NULL.");
     }
+    m_nreach = reaches->GetReachNumber();
+
+    if (nullptr == m_reachDownStream) reaches->GetReachesSingleProperty(REACH_DOWNSTREAM, &m_reachDownStream);
+    if (nullptr == m_chOrder) reaches->GetReachesSingleProperty(REACH_UPDOWN_ORDER, &m_chOrder);
+    if (nullptr == m_chWidth) reaches->GetReachesSingleProperty(REACH_WIDTH, &m_chWidth);
+    if (nullptr == m_chLen) reaches->GetReachesSingleProperty(REACH_LENGTH, &m_chLen);
+    if (nullptr == m_chDepth) reaches->GetReachesSingleProperty(REACH_DEPTH, &m_chDepth);
+    if (nullptr == m_chVel) reaches->GetReachesSingleProperty(REACH_V0, &m_chVel);
+    if (nullptr == m_chSlope) reaches->GetReachesSingleProperty(REACH_SLOPE, &m_chSlope);
+    if (nullptr == m_chCover) reaches->GetReachesSingleProperty(REACH_COVER, &m_chCover);
+    if (nullptr == m_chErod) reaches->GetReachesSingleProperty(REACH_EROD, &m_chErod);
+
+    m_reachUpStream = reaches->GetUpStreamIDs();
+    m_reachLayers = reaches->GetReachLayers(m_layeringMethod);
 }
 
 void SEDR_SBAGNOLD::SedChannelRouting(int i) {
@@ -383,10 +355,10 @@ void SEDR_SBAGNOLD::SedChannelRouting(int i) {
     }
     allSediment = sedUp + m_sedtoCh[i] + m_sedStorage[i];
     /// add point source loadings
-    if (m_ptSub != NULL && m_ptSub[i] > 0.f) {
+    if (nullptr != m_ptSub && m_ptSub[i] > 0.f) {
         allSediment += m_ptSub[i];
     }
-    //if (i == 12) cout<<"\tall sed: "<<allSediment<<", sed up: "<<sedUp<<", sed to ch: "<<m_sedtoCh[i]<<", strg: "<<m_sedStorage[i]<<endl;
+    //if (i == 4) cout<<"\tall sed: "<<allSediment<<", sed up: "<<sedUp<<", sed to ch: "<<m_sedtoCh[i]<<", strg: "<<m_sedStorage[i]<<endl;
 
     // initialize water in reach during time step
     qOutV = m_qchOut[i] * m_dt; // m^3
@@ -422,13 +394,18 @@ void SEDR_SBAGNOLD::SedChannelRouting(int i) {
     } else {
         peakVelocity = peakFlowRate / crossarea;
     }
-    if (peakVelocity > 5.f) peakVelocity = 5.f;
-
-    /// calculate tbase  |none  |flow duration (fraction of 24 hr)
+    if (peakVelocity > 5.f) {
+        // cout << "subbasin id: " << i <<", peakVelocity: " << peakVelocity << endl;
+        peakVelocity = 5.f;
+    }/// calculate tbase  |none  |flow duration (fraction of 24 hr)
     float tbase = m_chLen[i] / (m_dt * peakVelocity);
     if (tbase > 1.f) tbase = 1.f;
 
-    /// New imporoved method for sediment transport
+    //if (i == 4) cout << "qchOut: " << m_qchOut[i] << ", allwater: " << allWater <<
+    //    ", chLen: " << m_chLen[i] << ", peakVelocity: " << peakVelocity << 
+    //    ", m_preChWTDepth: " << m_preChWTDepth[i] << ", tbase: "<< tbase << endl;
+
+    /// New improved method for sediment transport
     float initCon = 0.f; // cyin
     float maxCon = 0.f; // cych
     float sedDeposition = 0.f; // depnet, and dep
@@ -440,7 +417,7 @@ void SEDR_SBAGNOLD::SedChannelRouting(int i) {
     initCon = allSediment / allWater; // kg/m^3
     //max concentration
     maxCon = m_spcon * pow(peakVelocity, m_spexp) * 1000.f; // kg/m^3
-    //if (i == 12) cout<<"iniCon: "<<initCon<<", maxCon: "<<maxCon<<endl;
+    //if (i == 4) cout<<"iniCon: "<<initCon<<", maxCon: "<<maxCon<<endl;
     //initial concentration,mix sufficiently
     sedDeposition = allWater * (initCon - maxCon); // kg
     if (peakVelocity < m_vcrit) {
@@ -449,6 +426,7 @@ void SEDR_SBAGNOLD::SedChannelRouting(int i) {
 
     if (sedDeposition < 0.f)    //degradation
     {
+        //cout << "initCon < maxCon, subbasin id: " << i << endl;
         sedDegradation = -sedDeposition * tbase;
         // first the deposited material will be degraded before channel bed
         if (sedDegradation >= m_sedDep[i]) {
@@ -465,12 +443,12 @@ void SEDR_SBAGNOLD::SedChannelRouting(int i) {
         sedDegradation2 = 0.f;
     }
     //update sed deposition
-    m_sedDep[i] += sedDeposition - sedDegradation1;
+    m_sedDep[i] += (sedDeposition - sedDegradation1);
     if (m_sedDep[i] < UTIL_ZERO) m_sedDep[i] = 0.f;
-    m_sedDeg[i] += sedDegradation1 + sedDegradation2;
+    m_sedDeg[i] += (sedDegradation1 + sedDegradation2);
 
     //get sediment after deposition and degradation
-    allSediment += sedDegradation1 + sedDegradation2 - sedDeposition;
+    allSediment += (sedDegradation1 + sedDegradation2 - sedDeposition);
     if (allSediment < UTIL_ZERO) allSediment = 0.f;
     //get out flow water fraction
     float outFraction = qOutV / allWater;
@@ -484,7 +462,7 @@ void SEDR_SBAGNOLD::SedChannelRouting(int i) {
     // get final sediment in water, cannot large than 0.848 ton/m3
     float maxSedinWt = 0.848f * qOutV * 1000.f; /// kg
     if (m_sedOut[i] > maxSedinWt) {
-        m_sedDep[i] += m_sedOut[i] - maxSedinWt;
+        m_sedDep[i] += (m_sedOut[i] - maxSedinWt);
         m_sedOut[i] = maxSedinWt;
     }
     /// calculate sediment concentration
@@ -501,7 +479,7 @@ void SEDR_SBAGNOLD::SedChannelRouting(int i) {
     m_rchDeg[i] = sedDegradation2;
     m_rchDep[i] = sedDeposition;
     m_flplainDep[i] = 0.f;
-    //if (i == 12) cout<<"\tallSediment2: "<<allSediment<<", sedDeg: "<<sedDegradation1<<", sedDeg2: "<<sedDegradation2<<
+    //if (i == 4) cout<<"\tallSediment2: "<<allSediment<<", sedDeg: "<<sedDegradation1<<", sedDeg2: "<<sedDegradation2<<
     //", sedDeposition: "<<sedDeposition<<", sed flow out: "<<m_sedOut[i]<<endl;
 }
 

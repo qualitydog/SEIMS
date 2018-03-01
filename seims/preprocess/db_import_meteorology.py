@@ -10,12 +10,13 @@
 import time
 from datetime import timedelta
 
+from pygeoc.utils import DateClass, StringClass
 from pymongo import ASCENDING
 
-from seims.preprocess.hydro_climate_utility import HydroClimateUtilClass
-from seims.preprocess.text import DBTableNames, DataValueFields, DataType, VariableDesc
-from seims.preprocess.utility import read_data_items_from_txt, DEFAULT_NODATA, PI
-from seims.pygeoc.pygeoc.utils.utils import DateClass, StringClass
+from db_mongodb import MongoUtil
+from hydro_climate_utility import HydroClimateUtilClass
+from text import DBTableNames, DataValueFields, DataType, VariableDesc
+from utility import read_data_items_from_txt, DEFAULT_NODATA, PI
 
 
 class ClimateStats(object):
@@ -157,7 +158,7 @@ class ImportMeteoData(object):
                     bulk.insert(cur_dic)
                     count += 1
                     if count % 500 == 0:  # execute each 500 records
-                        bulk.execute()
+                        MongoUtil.run_bulk(bulk)
                         bulk = climdb[DBTableNames.data_values].initialize_ordered_bulk_op()
 
             if dic[DataValueFields.id] not in hydro_climate_stats.keys():
@@ -165,7 +166,7 @@ class ImportMeteoData(object):
             hydro_climate_stats[dic[DataValueFields.id]].add_item(dic)
         # execute the remained records
         if count % 500 != 0:
-            bulk.execute()
+            MongoUtil.run_bulk(bulk)
         for item, cur_climate_stats in hydro_climate_stats.items():
             cur_climate_stats.annual_stats()
         # Create index
@@ -225,8 +226,8 @@ class ImportMeteoData(object):
 
 def main():
     """TEST CODE"""
-    from seims.preprocess.config import parse_ini_configuration
-    from seims.preprocess.db_mongodb import ConnectMongoDB
+    from config import parse_ini_configuration
+    from db_mongodb import ConnectMongoDB
     seims_cfg = parse_ini_configuration()
     client = ConnectMongoDB(seims_cfg.hostname, seims_cfg.port)
     conn = client.get_conn()

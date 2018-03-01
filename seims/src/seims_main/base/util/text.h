@@ -62,6 +62,7 @@
 #define PARAM_FLD_USE                          "USE"
 #define PARAM_USE_Y                            "Y"
 #define PARAM_USE_N                            "N"
+#define PARAM_CALI_VALUES                      "CALI_VALUES"  /// for calibration
 
 ////////////  Input and Output Tags   ///////////////
 // Fields in Model Configuration Collections //
@@ -192,14 +193,18 @@
 #define REACH_DOWNSTREAM                       "DOWNSTREAM"
 #define REACH_UPDOWN_ORDER                     "UP_DOWN_ORDER"
 #define REACH_DOWNUP_ORDER                     "DOWN_UP_ORDER"
-#define REACH_WIDTH                            "WIDTH"
-#define REACH_SIDESLP                          "SIDE_SLOPE"
-#define REACH_LENGTH                           "LENGTH"
-#define REACH_DEPTH                            "DEPTH"
-#define REACH_V0                               "V0"
-#define REACH_AREA                             "AREA"
-#define REACH_MANNING                          "MANNING"
-#define REACH_SLOPE                            "SLOPE"
+#define REACH_WIDTH                            "CH_WIDTH"
+#define REACH_SIDESLP                          "CH_SSLP"
+#define REACH_LENGTH                           "CH_LEN"
+#define REACH_DEPTH                            "CH_DEPTH"
+#define REACH_V0                               "CH_V0"
+#define REACH_AREA                             "CH_AREA"
+#define REACH_MANNING                          "CH_N"
+#define REACH_SLOPE                            "CH_SLP"
+#define REACH_KBANK                            "CH_K_BANK"
+#define REACH_KBED                             "CH_K_BED"
+#define REACH_COVER                            "CH_COVER"
+#define REACH_EROD                             "CH_EROD"
 #define REACH_BC1                              "BC1"
 #define REACH_BC2                              "BC2"
 #define REACH_BC3                              "BC3"
@@ -213,8 +218,6 @@
 #define REACH_RK2                              "RK2"
 #define REACH_RK3                              "RK3"
 #define REACH_RK4                              "RK4"
-#define REACH_COVER                            "COVER"
-#define REACH_EROD                             "EROD"
 #define REACH_DISOX                            "DISOX"
 #define REACH_BOD                              "BOD"
 #define REACH_ALGAE                            "ALGAE"
@@ -531,7 +534,7 @@
 #define VAR_CH_DET "DET"
 #define VAR_CH_DETCO "ChDetCo"
 #define VAR_CH_FLOWCAP "CAP"
-#define VAR_CH_MANNING_FACTOR "CH_ManningFactor"
+//#define VAR_CH_MANNING_FACTOR "CH_ManningFactor"
 #define VAR_CH_SEDRATE "QSN"
 #define VAR_CH_TCCO "ChTcCo"
 #define VAR_CH_V "CHANV"
@@ -658,9 +661,9 @@
 #define VAR_IRR_WTR "irr_water"
 #define VAR_ISEP_OPT "isep_opt"
 #define VAR_JULIAN_DAY "JDay"                       /// Julian day (int)
-#define VAR_K_BANK "K_bank"                         /// hydraulic conductivity of the channel bank
+//#define VAR_K_BANK "K_bank"                         /// hydraulic conductivity of the channel bank
 #define VAR_K_BLOW "K_blow"
-#define VAR_K_CHB "K_chb"                           /// hydraulic conductivity of the channel bed
+//#define VAR_K_CHB "K_chb"                           /// hydraulic conductivity of the channel bed
 #define VAR_K_L "k_l"
 #define VAR_K_N "k_n"
 #define VAR_K_P "k_p"
@@ -695,7 +698,7 @@
 #define VAR_POT_K "pot_k"
 #define VAR_MANNING "Manning"
 #define VAR_MAT_YRS "MAT_YRS"
-#define VAR_MGT_FIELD "mgt_fields"
+//#define VAR_MGT_FIELD "mgt_fields" // remove by lj, 08/16/17
 #define VAR_MINPGW_TOCH "minpgwToCh"
 #define VAR_MOIST_IN "Moist_in"
 #define VAR_MSF "ManningScaleFactor"                /// flow velocity scaling factor for calibration
@@ -746,12 +749,13 @@
 #define VAR_PERDE "perde"
 #define VAR_PET "PET"                           /// Potential Evapotranspiration of day
 #define VAR_PET_HCOEF "HCoef_pet"                   /// Coefficient related to radiation used in Hargreaves method
-#define VAR_PET_HCOEF "HCoef_pet"                   /// Coefficient related to radiation used in Hargreaves method
 #define VAR_PHOSKD "phoskd"
 #define VAR_PHUBASE "PHUBASE"
 #define VAR_PHUPLT "PHU_PLT"
 #define VAR_PHUTOT "PHU0"
 #define VAR_PI_B "Pi_b"
+#define VAR_PCP2CANFR_PR "pcp2canfr_pr"
+#define VAR_EMBNKFR_PR "embnkfr_pr"
 #define VAR_PL_RSDCO "rsdco_pl"                     /// Plant residue decomposition coefficient
 #define VAR_PLANT_N "plant_N"
 #define VAR_PLANT_P "plant_P"
@@ -991,10 +995,9 @@
 #define VAR_VDIV "Vdiv"                             /// diversion loss of the river reach
 #define VAR_VP_ACT "avp"                            /// actual vapor pressure
 #define VAR_VP_SAT "svp"                            /// Saturated vapor pressure
-#define VAR_VPD "VPD"                                 /// vapor pressure deficit
+#define VAR_VPD "VPD"                               /// vapor pressure deficit
 #define VAR_VPDFR "vpdfr"
 #define VAR_VSEEP0 "Vseep0"                         ///  the initial volume of transmission loss to the deep aquifer over the time interval
-#define VAR_VSF "VelScaleFactor"                    /// flow velocity scaling factor for calibration
 #define VAR_WATTEMP "wattemp"
 #define VAR_WAVP "WAVP"
 #define VAR_WDNTL "wdntl"                           /// amount of nitrogen lost from nitrate pool by denitrification in soil profile on current day in cell(kg N/ha)
@@ -1153,7 +1156,7 @@
 #define DESC_CH_DET "distribution of channel flow detachment"
 #define DESC_CH_DETCO "Calibration coefficient of channel flow detachment"
 #define DESC_CH_FLOWCAP "distribution of channel flow capacity"
-#define DESC_CH_MANNING_FACTOR "Manning scaling factor for channel routing"
+//#define DESC_CH_MANNING_FACTOR "Manning scaling factor for channel routing"
 #define DESC_CH_SEDRATE "distribution of channel sediment rate"
 #define DESC_CH_TCCO "Calibration coefficient of transport capacity calculation"
 #define DESC_CH_TN " total N amount in reach"
@@ -1291,9 +1294,9 @@
 #define DESC_IRR_WTR "amount of water applied to cell on current day"
 #define DESC_ISEP_OPT "initial septic operational condition"
 #define DESC_JULIAN_DAY "Julian day (int)"
-#define DESC_K_BANK "hydraulic conductivity of the channel bank"
+//#define DESC_K_BANK "hydraulic conductivity of the channel bank"
 #define DESC_K_BLOW "fraction coefficient of precipitation as snow"
-#define DESC_K_CHB "hydraulic conductivity of the channel bed"
+//#define DESC_K_CHB "hydraulic conductivity of the channel bed"
 #define DESC_K_L "half saturation coefficient for light"
 #define DESC_K_N "half-saturation constant for nitrogen"
 #define DESC_K_P "half saturation constant for phosphorus"
@@ -1332,7 +1335,7 @@
 #define DESC_MAXTEMP "Maximum Celsius degree of air temperature"
 #define DESC_MEANTEMP "Mean Celsius degree of air temperature"
 #define DESC_METEOLAT "Latitude of MeteoClimate station"
-#define DESC_MGT_FIELD "Management fields"
+//#define DESC_MGT_FIELD "Management fields" // remove by lj, 08/16/17
 #define DESC_MINPGW_CH "soluble P in groundwater to channel"
 #define DESC_MINTEMP "Minimum Celsius degree of air temperature"
 #define DESC_MOIST_IN "Initial soil moisture"
@@ -1368,7 +1371,6 @@
 #define DESC_PERCO_N "amount of nitrate percolating past bottom of soil profile"
 #define DESC_PERCO_P "amount of soluble P percolating past bottom of soil profile"
 #define DESC_PERCO "the amount of water percolated from the soil water reservoir, i.e., groundwater recharge"
-#define DESC_PET "Potential Evapotranspiration of day"
 #define DESC_PET "Potential Evapotranspiration of day"
 #define DESC_PET_HCOEF "Coefficient related to radiation used in Hargreaves method"
 #define DESC_PET_K "Correction factor for PET"
@@ -1480,7 +1482,6 @@
 #define DESC_SNO3UP "amount of nitrate moving upward in the soil profile in watershed"
 #define DESC_SNOCOVMX "Minimum snow water content that corresponds to 100% snow cover"
 #define DESC_SNO50COV "Fraction of SNOCOVMX that corresponds to 50% snow cover"
-#define DESC_SNRD "snow blowing in or out the cell"
 #define DESC_SNRD "snow blowing in or out the cell"
 #define DESC_SNSB "snow sublimation (water equivalent)"
 #define DESC_SNWB "snow water balance for selected subbasins"
@@ -1625,7 +1626,6 @@
 #define DESC_VPD "vapor pressure deficit"
 #define DESC_VPDFR "vapor pressure deficit(kPa) corresponding to the second point on the stomatal conductance curve"
 #define DESC_VSEEP0  "the initial volume of transmission loss to the deep aquifer over the time interval"
-#define DESC_VSF "flow velocity scaling factor for calibration"
 #define DESC_WATTEMP "temperature of water in reach"
 #define DESC_WAVP "rate of decline in rue per unit increase in vapor pressure deficit"
 #define DESC_WDNTL "amount of nitrogen lost from nitrate pool by denitrification in soil profile on current day in cell"
@@ -1690,4 +1690,5 @@
 #define HEADER_RS_CELLSIZE                     "CELLSIZE"
 #define HEADER_RS_LAYERS                       "LAYERS"
 #define HEADER_RS_SRS                          "SRS"
+
 #endif

@@ -37,7 +37,7 @@ public:
                        time_t endTime, time_t interval);
 
     //! Destructor
-    ~RegularMeasurement(void);
+    virtual ~RegularMeasurement();
 
     //! Get site date by time \a pData
     virtual float *GetSiteDataByTime(time_t t);

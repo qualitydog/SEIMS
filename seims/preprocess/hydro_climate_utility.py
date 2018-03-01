@@ -7,12 +7,12 @@
 """
 import math
 import time
-
 from datetime import datetime, timedelta
 
-from seims.preprocess.text import DBTableNames, StationFields, DataValueFields
-from seims.preprocess.utility import LFs
-from seims.pygeoc.pygeoc.utils.utils import StringClass, MathClass
+from pygeoc.utils import StringClass, MathClass
+
+from text import DBTableNames, StationFields, DataValueFields
+# from utility import LFs
 
 
 class HydroClimateUtilClass(object):
@@ -43,7 +43,7 @@ class HydroClimateUtilClass(object):
 
     @staticmethod
     def rs(doy, n, lat):
-        """solar radiation, n is sunshine duration"""
+        """solar radiation (MJ/m2), n is sunshine duration (hour)"""
         lat = lat * math.pi / 180.
         a = 0.25
         b = 0.5
@@ -58,7 +58,7 @@ class HydroClimateUtilClass(object):
     @staticmethod
     def query_climate_sites(clim_db, site_type):
         """Query climate sites information, return a dict with stationID as key."""
-        from seims.preprocess.db_import_sites import SiteInfo
+        from db_import_sites import SiteInfo
         sites_loc = dict()
         sites_coll = clim_db[DBTableNames.sites]
         find_results = sites_coll.find({StationFields.type: site_type})
@@ -73,16 +73,6 @@ class HydroClimateUtilClass(object):
         return sites_loc
 
     @staticmethod
-    def get_datetime_from_string(formatted_str):
-        """get datetime() object from string formatted %Y-%m-%d %H:%M:%S"""
-        try:
-            org_time = time.strptime(formatted_str, '%Y-%m-%d %H:%M:%S')
-        except ValueError:
-            raise ValueError("The format of DATETIME must be %Y-%m-%d %H:%M:%S!")
-        return datetime(org_time.tm_year, org_time.tm_mon, org_time.tm_mday,
-                        org_time.tm_hour, org_time.tm_min, org_time.tm_sec)
-
-    @staticmethod
     def get_time_system_from_data_file(in_file):
         """Get the time system from the data file. The basic format is:
            #<time_system> [<time_zone>], e.g., #LOCALTIME 8, #UTCTIME
@@ -91,11 +81,11 @@ class HydroClimateUtilClass(object):
         time_zone = time.timezone / -3600
         f = open(in_file)
         for line in f:
-            str_line = line
-            for LF in LFs:
-                if LF in line:
-                    str_line = line.split(LF)[0]
-                    break
+            str_line = line.strip()
+            # for LF in LFs:
+            #     if LF in line:
+            #         str_line = line.split(LF)[0]
+            #         break
             if str_line[0] != '#':
                 break
             if str_line.lower().find('utc') >= 0:
@@ -126,7 +116,7 @@ class HydroClimateUtilClass(object):
         dt = None
         for i, fld in enumerate(flds):
             if StringClass.string_match(fld, DataValueFields.dt):
-                dt = HydroClimateUtilClass.get_datetime_from_string(values[i])
+                dt = StringClass.get_datetime(values[i])
             elif StringClass.string_match(fld, DataValueFields.y):
                 cur_y = int(values[i])
             elif StringClass.string_match(fld, DataValueFields.m):
@@ -155,8 +145,8 @@ class HydroClimateUtilClass(object):
 
 def main():
     """TEST CODE"""
-    from seims.preprocess.config import parse_ini_configuration
-    from seims.preprocess.db_mongodb import ConnectMongoDB
+    from config import parse_ini_configuration
+    from db_mongodb import ConnectMongoDB
     seims_cfg = parse_ini_configuration()
     client = ConnectMongoDB(seims_cfg.hostname, seims_cfg.port)
     conn = client.get_conn()

@@ -9,19 +9,20 @@
               1.1. Add stream order modification, according to depression.ave of WetSpa.
               1.2. Add another depressional storage method according to SWAT, depstor.f
 """
-from math import exp, sqrt
 import sys
+import os
+from math import exp, sqrt
 
 import numpy
+from osgeo.gdal import GDT_Float32
+from osgeo.ogr import FieldDefn as ogr_FieldDefn
 from osgeo.ogr import OFTReal
 from osgeo.ogr import Open as ogr_Open
-from osgeo.ogr import FieldDefn as ogr_FieldDefn
-from osgeo.gdal import GDT_Float32
+from pygeoc.hydro import FlowModelConst
+from pygeoc.raster import RasterUtilClass
 
-from seims.preprocess.db_import_stream_parameters import ImportReaches2Mongo
-from seims.preprocess.utility import status_output, UTIL_ZERO, DEFAULT_NODATA
-from seims.pygeoc.pygeoc.hydro.hydro import FlowModelConst
-from seims.pygeoc.pygeoc.raster.raster import RasterUtilClass
+from db_import_stream_parameters import ImportReaches2Mongo
+from utility import status_output, UTIL_ZERO, DEFAULT_NODATA
 
 sys.setrecursionlimit(10000)
 
@@ -239,7 +240,8 @@ class TerrainUtilClass(object):
     @staticmethod
     def std_of_flow_time_to_stream(streamlink, flow_dir_file, slope, radius, velocity, delta_s_file,
                                    flow_dir_code="TauDEM"):
-        """Generate standard deviation of t0_s (flow time to the workflow channel from each cell)."""
+        """Generate standard deviation of t0_s (flow time to the workflow channel from each cell).
+        """
         strlk_r = RasterUtilClass.read_raster(streamlink)
         strlk_data = strlk_r.data
         rad_data = RasterUtilClass.read_raster(radius).data
@@ -426,7 +428,7 @@ class TerrainUtilClass(object):
     @staticmethod
     def parameters_extration(cfg, maindb):
         """Main entrance for terrain related spatial parameters extraction."""
-        f = open(cfg.logs.extract_terrain, 'w')
+        f = cfg.logs.extract_terrain
         # 1. Calculate initial channel width by accumulated area and add width to reach.shp.
         status_output("Calculate initial channel width and added to reach.shp...", 10, f)
         acc_file = cfg.spatials.d8acc
@@ -454,9 +456,7 @@ class TerrainUtilClass(object):
             TerrainUtilClass.flow_velocity(slope_file, radius_file, manning_file, velocity_file)
             flow_dir_file = cfg.spatials.d8flow
             t0_s_file = cfg.spatials.t0_s
-            flow_model_code = "TauDEM"
-            if not cfg.is_TauDEM:
-                flow_model_code = "ArcGIS"
+            flow_model_code = "ArcGIS"
             TerrainUtilClass.flow_time_to_stream(streamlink_file, velocity_file, flow_dir_file,
                                                  t0_s_file, flow_model_code)
             delta_s_file = cfg.spatials.delta_s
@@ -473,13 +473,12 @@ class TerrainUtilClass(object):
                                                                  dormhr_file, cfg.dorm_hr)
 
         status_output("Terrain related spatial parameters extracted done!", 100, f)
-        f.close()
 
 
 def main():
     """TEST CODE"""
-    from seims.preprocess.config import parse_ini_configuration
-    from seims.preprocess.db_mongodb import ConnectMongoDB
+    from config import parse_ini_configuration
+    from db_mongodb import ConnectMongoDB
     seims_cfg = parse_ini_configuration()
     client = ConnectMongoDB(seims_cfg.hostname, seims_cfg.port)
     conn = client.get_conn()

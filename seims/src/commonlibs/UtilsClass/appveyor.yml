@@ -1,0 +1,25 @@
+version: UtilsClass.{build}
+branches:
+  only:
+  - master
+  - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+image: Visual Studio 2013
+configuration: Debug
+clone_folder: C:\zhulj\utilsclass
+build:
+  parallel: true
+  verbosity: minimal
+build_script:
+  # make directory for installation
+  - cd C:\zhulj\utilsclass
+  - mkdir utils_win64bit
+  - ps: "ls"
+  - mkdir build_64bit
+  - cd build_64bit
+  - cmake -G "Visual Studio 12 2013 Win64" .. -DUNITTEST=1 -DINSTALL_PREFIX=C:\zhulj\utilsclass\utils_win64bit
+  - msbuild.exe ALL_BUILD.vcxproj /p:Configuration=Debug
+  - msbuild.exe INSTALL.vcxproj /p:Configuration=Debug
+  - cd ..
+  - ps: "ls"
+  # run unittest
+  - C:\zhulj\utilsclass\utils_win64bit\UnitTests_Utils.exe

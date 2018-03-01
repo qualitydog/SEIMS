@@ -18,7 +18,7 @@ MongoClient::MongoClient(const char *host, uint16_t port) : m_host(host), m_port
 MongoClient* MongoClient::Init(const char *host, uint16_t port) {
     if (!isIPAddress(host)) {
         cout << "IP address: " + string(host) + " is invalid, Please check!" << endl;
-        return NULL;
+        return nullptr;
     }
     mongoc_init();
     mongoc_uri_t *uri = mongoc_uri_new_for_host_port(host, port);
@@ -28,7 +28,7 @@ MongoClient* MongoClient::Init(const char *host, uint16_t port) {
     bson_error_t *err = NULL;
     if (!mongoc_client_get_server_status(conn, NULL, reply, err)) {
         cout << "Failed to connect to MongoDB!" << endl;
-        return NULL;
+        return nullptr;
     }
     bson_destroy(reply);
     mongoc_uri_destroy(uri);
@@ -99,6 +99,10 @@ mongoc_gridfs_t *MongoClient::getGridFS(string const &dbname, string const &gfsn
     }
 }
 
+MongoGridFS *MongoClient::GridFS(string const &dbname, string const &gfsname) {
+    return new MongoGridFS(getGridFS(dbname, gfsname));
+}
+
 void MongoClient::getGridFSFileNames(string const &dbname, string const &gfsname, vector<string>&fileExists) {
     mongoc_gridfs_t *gfs = this->getGridFS(dbname, gfsname);
     MongoGridFS(gfs).getFileNames(fileExists);
@@ -160,13 +164,15 @@ MongoCollection::~MongoCollection(void) {
 mongoc_cursor_t* MongoCollection::ExecuteQuery(const bson_t* b) {
     // printf("%s\n", bson_as_json(b, NULL));
     // TODO: mongoc_collection_find should be deprecated, however, mongoc_collection_find_with_opts
-    //       may not work in my Windows 10. So, uncomment the following code when I figure it out. LJ
-//#if MONGOC_CHECK_VERSION(1, 5, 0)
+    //       may not work in my Windows 10 both by MSVC and MINGW64.
+    //       So, remove `&& !defined(windows)` when this bug fixed. LJ
+    //       Upd 12/13/2017 The new method also failed in our linux cluster (redhat 6.2 and Intel C++ 12.1)
+    //                      So, I will uncomment these code later.
+//#if MONGOC_CHECK_VERSION(1, 5, 0) && !defined(windows)
 //    mongoc_cursor_t* cursor = mongoc_collection_find_with_opts(m_collection, b, NULL, NULL);
 //#else
-//    mongoc_cursor_t* cursor = mongoc_collection_find(m_collection, MONGOC_QUERY_NONE, 0, 0, 0, b, NULL, NULL);
-//#endif /* MONGOC_CHECK_VERSION */
     mongoc_cursor_t* cursor = mongoc_collection_find(m_collection, MONGOC_QUERY_NONE, 0, 0, 0, b, NULL, NULL);
+//#endif /* MONGOC_CHECK_VERSION */
     return cursor;
 }
 

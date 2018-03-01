@@ -1,13 +1,6 @@
-#if (defined _DEBUG) && (defined MSVC) && (defined VLD)
+#if (defined _DEBUG) && (defined _MSC_VER) && (defined VLD)
 #include "vld.h"
 #endif /* Run Visual Leak Detector during Debug */
-#include <iostream>
-#include <fstream>
-#include <sstream>
-
-#include "MongoUtil.h"
-#include "clsRasterData.cpp"
-
 #include "SubbasinIUHCalculator.h"
 
 using namespace std;
@@ -15,7 +8,7 @@ using namespace std;
 void MainMongoDB(const char *modelStr, const char *gridFSName, int nSubbasins, const char *host, int port, int dt) {
     // connect to mongodb
     MongoClient* client = MongoClient::Init(host, port);
-    if (NULL == client) {
+    if (nullptr == client) {
         throw ModelException("DataCenterMongoDB", "Constructor", "Failed to connect to MongoDB!");
     }
     MongoGridFS* gfs = new MongoGridFS(client->getGridFS(string(modelStr), string(gridFSName)));
@@ -52,9 +45,16 @@ void MainMongoDB(const char *modelStr, const char *gridFSName, int nSubbasins, c
         SubbasinIUHCalculator iuh(dt, rsMask, rsLandcover, rsTime, rsDelta, gfs);
         iuh.calCell(i);
     }
+    delete gfs;
+    delete client;
 }
 
 int main(int argc, const char **argv) {
+    if (argc < 6) {
+        cout << "Usage: " <<
+            "IUH <MongoDB HOST IP> <PORT> <modelName> <GridFSName> <dateInterval> <nSubbasins>\n";
+        exit(-1);
+    }
     try { 	
         const char *host = argv[1];
         int port = atoi(argv[2]);

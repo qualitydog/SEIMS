@@ -7,16 +7,16 @@
                 17-06-23  lj - reorganize as basic class
                 17-07-07  lj - remove SQLite database file as intermediate file
 """
-from os import sep as SEP
+import os
 
 from numpy import frompyfunc as np_frompyfunc
 from osgeo.gdal import GDT_Float32
+from pygeoc.raster import RasterUtilClass
+from pygeoc.utils import UtilClass, MathClass, FileClass, StringClass
 
-from seims.preprocess.text import ModelParamDataUtils
-from seims.preprocess.utility import status_output, read_data_items_from_txt, \
+from text import ModelParamDataUtils
+from utility import status_output, read_data_items_from_txt, \
     DEFAULT_NODATA, UTIL_ZERO
-from seims.pygeoc.pygeoc.raster.raster import RasterUtilClass
-from seims.pygeoc.pygeoc.utils.utils import UtilClass, MathClass, FileClass, StringClass
 
 
 class LanduseUtilClass(object):
@@ -106,7 +106,7 @@ class LanduseUtilClass(object):
 
         # Generate GTIFF
         for item, v in replace_dicts.items():
-            filename = dst_dir + SEP + item + '.tif'
+            filename = dst_dir + os.sep + item + '.tif'
             print (filename)
             RasterUtilClass.raster_reclassify(landcover_file, v, filename)
         return replace_dicts['LANDCOVER'].values()
@@ -152,7 +152,7 @@ class LanduseUtilClass(object):
                 if code not in cur_dict.keys():
                     cur_dict[code] = dic.get(code)
             replace_dicts.append(cur_dict)
-            dst_crop_tifs.append(dst_dir + SEP + cur_attr + '.tif')
+            dst_crop_tifs.append(dst_dir + os.sep + cur_attr + '.tif')
         # print replace_dicts
         # print(len(replace_dicts))
         # print dst_crop_tifs
@@ -260,7 +260,7 @@ class LanduseUtilClass(object):
     @staticmethod
     def parameters_extraction(cfg, maindb):
         """Landuse spatial parameters extraction."""
-        f = open(cfg.logs.extract_soil, 'w')
+        f = cfg.logs.extract_lu
         # 1. Generate landuse lookup tables
         status_output("Generating landuse lookup tables from MongoDB...", 10, f)
         LanduseUtilClass.export_landuse_lookup_files_from_mongodb(cfg, maindb)
@@ -298,19 +298,20 @@ class LanduseUtilClass(object):
                                                         soil_texture_raster,
                                                         runoff_coef_file, cfg.imper_perc_in_urban)
         status_output("Landuse/Landcover related spatial parameters extracted done!", 100, f)
-        f.close()
 
 
 def main():
     """TEST CODE"""
-    from seims.preprocess.config import parse_ini_configuration
-    from seims.preprocess.db_mongodb import ConnectMongoDB
+    from config import parse_ini_configuration
+    from db_mongodb import ConnectMongoDB
     seims_cfg = parse_ini_configuration()
     client = ConnectMongoDB(seims_cfg.hostname, seims_cfg.port)
     conn = client.get_conn()
     main_db = conn[seims_cfg.spatial_db]
 
     LanduseUtilClass.parameters_extraction(seims_cfg, main_db)
+
+    client.close()
 
 
 if __name__ == '__main__':

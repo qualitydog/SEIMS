@@ -1,35 +1,28 @@
 /*!
  * \brief Areal struct BMP factory
- * \author GAO Huiran
+ * \author Huiran Gao, Liangjun Zhu
  * \date Feb. 2017
- * \revised Liangjun Zhu, 2017-7-13  partially rewrite this class, Scenario data only read from MongoDB
+ * \revised lj 2017-7-13  partially rewrite this class, Scenario data only read from MongoDB
  *                                   DataCenter will perform the data updating.
+ *          lj 2017-11-29 code style review
  */
 #ifndef SEIMS_BMP_AREALSTRUCT_H
 #define SEIMS_BMP_AREALSTRUCT_H
 
+#include "BMPFactory.h"
 #include "text.h"
 #include "utilities.h"
+#include "ParamInfo.h"
+
 #include "tinyxml.h"
-#include "BMPFactory.h"
-#include "clsRasterData.cpp"
+#include "clsRasterData.h"
 
 using namespace MainBMP;
 
 namespace MainBMP
 {
 /*!
- * \struct ParamEffect
- */
-struct ParamEffect
-{
-    string  paramID;
-    string  paramDesc;
-    string  change;
-    float   impact;
-};
-/*!
- * \class BMPArealStruct
+ * \class BMPArealStruct, inherited from \sa ParamInfo
  * \ingroup MainBMP
  * \brief Manage areal Structural BMP data 
  */
@@ -40,6 +33,12 @@ public:
     BMPArealStruct(const bson_t *&bsonTab, bson_iter_t &iter);
     //! Destructor
     ~BMPArealStruct();
+    //! Get name
+    string getBMPName(){ return m_name; }
+    //! Get suitable landuse
+    const vector<int>& getSuitableLanduse() const { return m_landuse; }
+    //! Get parameters
+    const map<string, ParamInfo*>& getParameters() const { return m_parameters; }
 private:
     int             m_id;          ///< unique BMP ID
     string          m_name;        ///< name
@@ -47,10 +46,10 @@ private:
     string          m_refer;       ///< references
     vector<int>     m_landuse;     ///< suitable placement landuse
     /*!
-     * key is the parameter name, remember to add subbasin number as prefix when use GridFS file in MongoDB
-     * value is the \sa ParamEffect data struct
+     * \key the parameter name, remember to add subbasin number as prefix when use GridFS file in MongoDB
+     * \value the \sa ParamInfo class
      */
-    map<string, ParamEffect> m_parameters;
+    map<string, ParamInfo*> m_parameters;
 };
 /*!
  * \class BMPArealStructFactory
@@ -63,92 +62,43 @@ class BMPArealStructFactory: public BMPFactory
 {
 public:
     /// Constructor
-    BMPArealStructFactory(const int scenarioId, const int bmpId, const int subScenario,
-                          const int bmpType, const int bmpPriority, vector<string> &distribution,
-                          const string collection, const string location);
+    BMPArealStructFactory(int scenarioId, int bmpId, int subScenario,
+                          int bmpType, int bmpPriority, vector<string> &distribution,
+                          const string& collection, const string& location);
     
     /// Destructor
-	~BMPArealStructFactory(void);
-
-	//vector<string> m_BMPparam;
-
-	//struct Param
-	//{
-	//	char BMPName[30];
-	//	int  BMPID;
-	//	char ParamName[30];
-	//	char Method;
-	//	double Value;
-	//};
-	////vector, storage of every parameter value
-	//vector<struct Param> Params;
-	////! read Xml file
-	//bool ReadXmlFile(string& szFileName,string moduleName);
+    virtual ~BMPArealStructFactory();
 
 	//! Load BMP parameters from MongoDB
-    void loadBMP(MongoClient* conn, const string &bmpDBName);
+    virtual void loadBMP(MongoClient* conn, const string &bmpDBName);
 
     //! Set raster data if needed
-    void setRasterData(map<string, FloatRaster*> &sceneRsMap);
+    virtual void setRasterData(map<string, FloatRaster*> &sceneRsMap);
+
+    //! Get management fields data
+    virtual float* getRasterData() { return m_mgtFieldsRs; };
+
+    //! Get effect unit IDs
+    const vector<int>& getUnitIDs() const { return m_unitIDs; }
+
+    //! Get areal BMP parameters
+    const map<int, BMPArealStruct*>& getBMPsSettings() const { return m_bmpStructMap; }
 
 	//! Output
-	void Dump(ostream *fs);
-
-    /// preUpdate parameters. In my view, this operation should be executed in DataCenter.
-	void BMPParametersPreUpdate(map<string, clsRasterData<float>*> rsMap, int nSubbasin,
-                                mongoc_gridfs_t *spatialData);
+    virtual void Dump(ostream *fs);
 
 private:
-    map<int, BMPArealStruct*> m_bmpStructMap;
-private:
-	///// field index for where to apply the subScenario
-	//string m_bmpDBName;
-	///// cell number
-	//int m_nCell;
-	///// field number
-	//int m_nField;
-
- //   /*
- //    * Key is the subScenario Id
- //    * Value i
-	// * string m_bmpDBName;       
- //    */
- //   map<int, vector<int>>  m_bmpArealStrOps;
-
-	///// BMP index in each field
-	//int* m_fieldBMPid;
+    //! management units file name
     string m_mgtFieldsName;
-	FloatRaster* m_mgtFieldsRs;
-
-	///// field raster data
-	//float* m_fieldmap;
-
-	///*!
- //   * Get BMP id in each field.
- //   * !!!This function is Not used!!!
- //   */
-	//void getFieldBMPid(map<int, vector<int>>  m_bmpArealStrOps);
-
-	///*!
- //   * Get field raster data.
- //   *
- //   */
-	//void readFieldRasterfile(int nSubbasin, mongoc_gridfs_t* spatialData,
- //                            clsRasterData<float>* templateRaster);
-
-	///*!
-	//* Update 1D parameters. 
-	//* 
-	//*/
-	//void Update(string paraName, int n, float* data, int subScenarioid,
- //               vector<int> location);
-
-	///*!
-	//* Update 2D parameters. 
-	//* 
-	//*/
-	//void Update2D(string paraName, int n, int lyr, float** data2D, int subScenarioid,
- //                 vector<int> location);
+    //! management units raster data
+    float* m_mgtFieldsRs;
+    //! locations
+    vector<int> m_unitIDs;
+    /*!
+     *\key The unique areal BMP ID
+     *\value Instance of \sa BMPArealStruct
+     */
+    map<int, BMPArealStruct*> m_bmpStructMap;
 };
 }
 #endif /* SEIMS_BMP_AREALSTRUCT_H */

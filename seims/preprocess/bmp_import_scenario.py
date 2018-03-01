@@ -5,12 +5,13 @@
     @changelog: 16-06-16  first implementation version
                 17-06-22  improve according to pylint and google style
 """
-from os import sep as SEP
+import os
 
-from seims.preprocess.text import DBTableNames
-from seims.preprocess.utility import read_data_items_from_txt
-from seims.pygeoc.pygeoc.raster.raster import RasterUtilClass
-from seims.pygeoc.pygeoc.utils.utils import MathClass, FileClass, StringClass
+from pygeoc.raster import RasterUtilClass
+from pygeoc.utils import MathClass, FileClass, StringClass
+
+from utility import read_data_items_from_txt
+from text import DBTableNames
 
 
 class ImportScenario2Mongo(object):
@@ -40,9 +41,9 @@ class ImportScenario2Mongo(object):
         bmp_tabs_path = []
         for f in bmp_files:
             bmp_tabs.append(f.split('.')[0])
-            bmp_tabs_path.append(cfg.scenario_dir + SEP + f)
+            bmp_tabs_path.append(cfg.scenario_dir + os.sep + f)
 
-        # create if collection not existed
+        # initialize if collection not existed
         c_list = scenario_db.collection_names()
         for item in bmp_tabs:
             if not StringClass.string_in_list(item.upper(), c_list):
@@ -62,7 +63,10 @@ class ImportScenario2Mongo(object):
                 dic = {}
                 for i, field_name in enumerate(field_array):
                     if MathClass.isnumerical(item[i]):
-                        dic[field_name.upper()] = float(item[i])
+                        v = float(item[i])
+                        if v % 1. == 0.:
+                            v = int(v)
+                        dic[field_name.upper()] = v
                     else:
                         dic[field_name.upper()] = str(item[i]).upper()
                 if StringClass.string_in_list(ImportScenario2Mongo._LocalX, dic.keys()) and \
@@ -74,7 +78,7 @@ class ImportScenario2Mongo(object):
                             dic[ImportScenario2Mongo._LocalX.upper()],
                             dic[ImportScenario2Mongo._LocalY.upper()])
                     if subbsn_id is not None and distance is not None:
-                        dic[ImportScenario2Mongo._SUBBASINID] = float(subbsn_id)
+                        dic[ImportScenario2Mongo._SUBBASINID] = int(subbsn_id)
                         dic[ImportScenario2Mongo._DISTDOWN] = float(distance)
                         scenario_db[bmp_tab_name.upper()].find_one_and_replace(dic, dic,
                                                                                upsert=True)
@@ -96,8 +100,8 @@ class ImportScenario2Mongo(object):
 
 def main():
     """TEST CODE"""
-    from seims.preprocess.config import parse_ini_configuration
-    from seims.preprocess.db_mongodb import ConnectMongoDB
+    from config import parse_ini_configuration
+    from db_mongodb import ConnectMongoDB
     seims_cfg = parse_ini_configuration()
     client = ConnectMongoDB(seims_cfg.hostname, seims_cfg.port)
     conn = client.get_conn()

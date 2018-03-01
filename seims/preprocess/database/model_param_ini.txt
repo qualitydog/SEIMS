@@ -1,6 +1,6 @@
 # ALL INITIAL MODEL PARAMETERS.
 # Table title (columns are split by COMMA!)
-# Last updated: 2017-7-12
+# Last updated: 2017-12-26
 TYPE,NAME,DESCRIPTION,UNIT,MODULE,VALUE,IMPACT,CHANGE,MAX,MIN
 Bacteria,bact_swf,fraction of manure containing active colony forming units (cfu),None,MGT_SWAT,0.15,1,RC,1,0
 Climate,Co2,CO2 Concentration,ppmv,ALL,330,1,RC,350,300
@@ -17,15 +17,12 @@ Discharge,b_bnk,bank storage loss coefficient,none,ALL,0.05,0,AC,0.2,0.02
 Discharge,Base_ex,Baseflow exponent,none,GW_RSVR,1,0,AC,4,1
 Discharge,bnk0,Initial bank storage,m3/m,ALL,0,0,AC,1,0
 Discharge,Ch_iuh,Channel flow IUH,none,ChannelRouting,-9999,0,NC,-9999,-9999
-Discharge,CH_ManningFactor,Manning scaling factor of channel routing,none,IKW_CH,1,0,AC,3,0.1
 Discharge,chs0,initial channel storage,m3/m,All,0,0,AC,100,0
 Discharge,chs0_perc,initial percentage of channel depth,none,ALL,0.05,0,AC,1,0
 Discharge,df_coef,Deep percolation coefficient,mm,GW_RSVR,0,0,AC,1,0
 Discharge,ep_ch,reach evaporation adjustment factor,m3/m,ALL,1,0,AC,1,0
-Discharge,gw0,Initial groundwater storage,mm,GW_RSVR,100,0,AC,1000,0
-Discharge,gwmax,Maximum groundwater storage,mm,GW_RSVR,300,0,AC,1000,0
-Discharge,k_bank,channel bank hydraulic conductivity,mm/hr,ALL,20,0,AC,150,0
-Discharge,k_chb,channel bottom hydraulic conductivity,mm/hr,ALL,0.5,0,AC,150,0
+Discharge,gw0,Initial groundwater storage,mm,GW_RSVR,100,0,AC,50000,0
+Discharge,gwmax,Maximum groundwater storage,mm,GW_RSVR,300,0,AC,100000,0
 Discharge,Kg,Baseflow recession coefficient,none,GW_RSVR,0.005,0,AC,0.1,0.001
 Discharge,Ki,Interflow scaling factor,none,SSR_DA,3,0,AC,10,0
 Discharge,MANNING,Manning's n,none,ALL,-9999,0,AC,10,0.001
@@ -37,7 +34,6 @@ Discharge,Ol_iuh,Overland flow IUH,none,ALL,-9999,0,NC,-9999,-9999
 Discharge,q_iter,Thrashold of storage change rate,m3/s,ChannelRouting,0.01,0,AC,0.1,0.001
 Discharge,s_iter,Threshold of reservoir storage change rate,m3,ALL,50,0,AC,1000,10
 Discharge,THETA,Parameter theta for the implicit finite deffirent equation,none,ALL,0.75,0,AC,1,0
-Discharge,VelScaleFactor,Scale factor used to adjust V0 in CH_MUSK,none,CH_MUSK,1,0,AC,1.5,0.5
 Groundwater,GW_recharge,Groundwater recharge,m3/s,MUSK_CH,0,0,AC,100,0
 Groundwater,gwrq,groundwater recharge to channel or perennial base flow,m3/s,MUSK_CH,0,0,AC,100,0
 InstreamWQ,algae,Algal biomass concentration in reach on the first day,mg alg/L,ChannelRouting,0,0,AC,200,0
@@ -56,9 +52,11 @@ InstreamWQ,orgp,Organic P concentration in reach on the first day,mg P/L,Channel
 Interception,BLAI,Leaf area index,none,PI_STORM,-9999,1,RC,12,0
 Interception,CoverFrac,vegetation cover fraction,none,All,-9999,1,RC,1,0
 Interception,Init_IS,Initial interception storage,mm,ALL,0,0,AC,1,0
-Interception,Interc_max,Maximum Interception Capacity,mm,ALL,-9999,1,RC,1.5,0.5
-Interception,Interc_min,Minimum Interception Capacity,mm,ALL,-9999,1,RC,1.5,0.5
+Interception,Interc_max,Maximum Interception Capacity,mm,ALL,-9999,1,RC,15,0.5
+Interception,Interc_min,Minimum Interception Capacity,mm,ALL,-9999,1,RC,15,0.
 Interception,Pi_b,Interception Storage Capacity Exponent,none,ALL,1.35,0,AC,1.5,0.5
+Nutrient,OM,Organic matter,%,ALL,-9999,1,RC,60,0.08
+Nutrient,SOL_CBN,Organic carbon content,%,ALL,-9999,1,RC,60,0.08
 Nutrient,ai0,Ratio of chlorophyll-a to algal biomass,ug/mg,NutCHRout,50,0,AC,100,10
 Nutrient,ai1,Fraction of algal biomass that is nigrogen,mg/mg,NutCHRout,0.08,1,RC,0.09,0.07
 Nutrient,ai2,Fraction of algal biomass that is phosphorus,mg/mg,NutCHRout,0.015,1,RC,0.02,0.01
@@ -110,7 +108,7 @@ Nutrient,rs2,Benthic (sediment) source rate for dissolved phosphorus in the reac
 Nutrient,rs3,Benthic source rate for NH4-N in the reach at 20 deg C,mg NH4-N)/((m**2)*day,NutCHRout,0.5,1,RC,1,0
 Nutrient,rs4,Rate coefficient for organic N settling in the reach at 20 deg C,1/day,NutCHRout,0.05,1,RC,0.1,0.001
 Nutrient,rs5,Organic phosphorus settling rate in the reach at 20 deg C,1/day,NutCHRout,0.05,1,RC,0.1,0.001
-Nutrient,sdnco,denitrification threshold: fraction of field capacity,none,NMINRL,1.02,1,RC,1,0
+Nutrient,sdnco,denitrification threshold: fraction of field capacity,none,NMINRL,1,1,RC,1,0
 Nutrient,tfact,Fraction of solar radiation that is photosynthetically active,none,NutCHRout,0.3,1,RC,1,0
 PlantGrowth,cswat,carbon modeling method,None,MGT_SWAT,0,0,AC,2,0
 PlantGrowth,dormhr,time threshold used to define dormant period for plant,hr,BIO_EPIC,0,1,AC,24,0
@@ -135,7 +133,7 @@ Sediment,eco1,calibration coefficient-1 of transport capacity calculation,none,K
 Sediment,eco2,calibration coefficient-2 of transport capacity calculation,none,KinWavSed_OL,146,1,RC,1000,0.001
 Sediment,flow_acc,the number of flow accumulation cells of each cell,none,ALL,-9999,0,NC,-9999,-9999
 Sediment,Omega,calibration coefficient of splash detachment erosion,none,SplashEro_Park,0.02,1,RC,10,0.0001
-Sediment,p_rf, Peak rate adjustment factor ,none,ChannelRouting,1,0,AC,3,1
+Sediment,p_rf, Peak rate adjustment factor ,none,ChannelRouting,1,0,AC,30,1
 Sediment,rain_yrs,number of yeares of data used to obtain values for RAINHHMX,none,MUSLE_I30,10,0,AC,10,5
 Sediment,RandRough,The random roughness,cm,SplashEro_KinEen,-9999,0,NC,20,0.05
 Sediment,rsd_covco,residue cover factor for computing fraction of cover,none,MUSLEC_LAI,0.3,0,AC,0.5,0.1
@@ -146,10 +144,10 @@ Sediment,Spl_delratio,Splash delivery ratio,none,SplashEro_KinEen,0.1,1,RC,1,0
 Sediment,T0_s,time of concentration,hr,ALL,-9999,0,NC,-9999,-9999
 Sediment,USLE_C,the cover management factor,none,ALL,-9999,1,RC,1,0
 Sediment,USLE_K,the soil erodibility factor,none,ALL,-9999,1,RC,1,0
-Sediment,USLE_LS_COEF,the LS coefficient,none,ALL,1,1.2,AC,10,0
+Sediment,USLE_LS_COEF,the LS coefficient,none,ALL,1,0,AC,10,0
 Sediment,USLE_P,the erosion control practice factor,none,ALL,-9999,1,RC,1,0
-Sediment,vcd,channel degredation code,None,SEDR,0,0,AC,1,0
-Sediment,vcrit,critical veldeg Ctiy for sediment deposition,m/s,ChannelRouting,0.01,0,AC,1,0
+Sediment,vcd,channel degredation code,None,SEDR,0,0,VC,1,0
+Sediment,vcrit,critical veloctiy for sediment deposition,m/s,ChannelRouting,0.01,0,AC,1,0
 Snow,c_rain,Rainfall impact factor,mm/mm/deg C/delta_t,SNO_DD,0.04,0,AC,1,0
 Snow,c_snow,temperature impact factor,mm/deg C/delta_t,SNO_DD,3,0,AC,6,0
 Snow,c_snow12,Melt factor on December 21,mm/deg C/day,SNO_SP,6.5,0,AC,9,6
@@ -181,15 +179,12 @@ WaterBalance,Conductivity,Soil hydraulic conductivity,mm/hr,ALL,-9999,1,RC,10,0.
 WaterBalance,Density,Soil bulk density,mg/cm3,ALL,-9999,1,RC,1.2,0.8
 WaterBalance,Depre_in,Initial depression storage coefficient,none,ALL,0.2,0,AC,1,0
 WaterBalance,Depression,Depression storage capacity,mm,ALL,-9999,1,RC,5,0.5
-WaterBalance,Fieldcap,Soil field capacity,m3/m3,ALL,-9999,1,RC,1.2,0.8
 WaterBalance,K_run,Runoff exponent when net rainfall approaches to zero,none,SUR_MR,2.5,0,AC,5,0
 WaterBalance,k_soil10,ratio between soil temperature at 10 cm and the mean,none,STP_FP,1,0,AC,3,0
-WaterBalance,Moist_in,Initial soil moisture,m3/m3,ALL,-9999,1,RC,1,0.8
-WaterBalance,P_max,Maximum rainfall intensity when k_run = 1.0,mm,SUR_MR,30,0,AC,60,10
+WaterBalance,P_max,Maximum rainfall intensity when k_run = 1.0,mm,SUR_MR,30,0,AC,1000,10
 WaterBalance,Poreindex,Pore size distribution index,none,ALL,-9999,1,RC,1.2,0.8
-WaterBalance,Porosity,Soil porosity,m3/m3,ALL,-9999,1,RC,1.2,0.8
-WaterBalance,pot_k,hydraulic conductivity of soil surface of pothole,mm/hr,IMP_SWAT,0.1,0,AC,10,0.01
-WaterBalance,Residual,soil residual moisture,m3/m3,ALL,-9999,1,RC,1.2,0.8
+WaterBalance,Porosity,Soil porosity,m3/m3,ALL,-9999,1,RC,0.8,0.2
+WaterBalance,pot_k,hydraulic conductivity of soil surface of pothole,mm/hr,IMP_SWAT,0.1,0,AC,100,0.01
 WaterBalance,Rootdepth,Root depth,m,ALL,-9999,1,RC,1.5,0.2
 WaterBalance,Runoff_co,Potential runoff coefficient,none,SUR_MR,-9999,1,RC,1,0.5
 WaterBalance,rv_co,Groundwater revap coefficient,none,GW_RSVR,0,0,AC,0.2,0
@@ -207,4 +202,19 @@ WaterBalance,soil_td1,Empirical coefficient for estimating soil temperature,deg 
 WaterBalance,soil_td2,Empirical coefficient for estimating soil temperature,deg C,STP_FP,0.339,0,AC,1,0
 WaterBalance,soiltemp0,Initial soil temperature,deg C,SOI_EB,-9999,1,RC,1.2,0.8
 WaterBalance,t_soil,Soil freezing temperature,deg C,ALL,-5,0,AC,0,-15
-WaterBalance,Wiltingpoint,Plant wilting point moisture,m3/m3,ALL,-9999,1,RC,1.2,0.8
+WaterBalance,Moist_in,Initial soil moisture,m3/m3,ALL,-9999,1,RC,1,0.8
+WaterBalance,Residual,soil residual moisture,m3/m3,ALL,-9999,1,RC,1.2,0.8
+WaterBalance,Wiltingpoint,Plant wilting point moisture,m3/m3,ALL,-9999,1,RC,0.5,0.05
+WaterBalance,Fieldcap,Soil field capacity,m3/m3,ALL,-9999,1,RC,0.9,0.2
+WaterBalance,SOL_AWC,amount of water available to plants in soil layer at field capacity (fc - wp),mm H2O,ALL,-9999,1,RC,100,0.1
+WaterBalance,SOL_UL,amount of water held in the soil layer at saturation (sat - wp water),mm H2O,ALL,-9999,1,RC,100,0.1
+Routing,ch_width,Average width of main channel,m,ChannelRouting,-9999,1,RC,1000,0
+Routing,ch_depth,Average depth of main channel,m,ChannelRouting,-9999,1,RC,30,0
+Routing,ch_slp,Average slope of main channel,m/m,ChannelRouting,-9999,1,RC,10,0.001
+Routing,ch_sslp,Channel side slope,m/m,ChannelRouting,2,1,RC,30,0.001
+Routing,ch_n,Manning coefficient n value for the main channel,none,ChannelRouting,-9999,1,RC,0.3,0
+Routing,ch_v0,Initial velocity V0 in channel,m/s,ChannelRouting,-9999,1,RC,10,0
+Routing,ch_k_bank,channel bank hydraulic conductivity,mm/hr,ChannelRouting,20,1,RC,150,0
+Routing,ch_k_bed,channel bed hydraulic conductivity,mm/hr,ChannelRouting,0.5,1,RC,150,0
+Routing,ch_cover,Channel cover factor,none,ChannelRouting,0.1,1,RC,1,0.001
+Routing,ch_erod,Channel erodibility factor,none,ChannelRouting,0.1,1,RC,0.6,0.001

@@ -7,11 +7,11 @@
                 17-07-05  lj - integrate hydro_find_sites.py, i.e. SITELIST in workflow database
 """
 from osgeo.ogr import Open as ogr_Open
+from pygeoc.utils import StringClass
 from pymongo import ASCENDING
 
-from seims.preprocess.text import StationFields, DBTableNames, VariableDesc, DataType, FieldNames
-from seims.preprocess.utility import read_data_items_from_txt, DEFAULT_NODATA
-from seims.pygeoc.pygeoc.utils.utils import StringClass
+from text import StationFields, DBTableNames, VariableDesc, DataType, FieldNames
+from utility import read_data_items_from_txt, DEFAULT_NODATA
 
 
 class SiteInfo(object):
@@ -121,7 +121,7 @@ class ImportHydroClimateSites(object):
         lyr = shp.GetLayer()
         for n in range(0, lyr.GetFeatureCount()):
             feat = lyr.GetFeature(n)
-            # This function may print Failed `CDLL(/opt/local/lib/libgeos_c.dylib)`
+            # This function may print Failed `CDLL(/opt/local/lib/libgeos_c.dylib)` in macOS
             # Don't worry about that!
             wkt_feat = shapely_loads(feat.geometry().ExportToWkt())
             shapely_objects.append(wkt_feat)
@@ -209,8 +209,8 @@ class ImportHydroClimateSites(object):
 
 def main():
     """TEST CODE"""
-    from seims.preprocess.config import parse_ini_configuration
-    from seims.preprocess.db_mongodb import ConnectMongoDB
+    from config import parse_ini_configuration
+    from db_mongodb import ConnectMongoDB
     seims_cfg = parse_ini_configuration()
     client = ConnectMongoDB(seims_cfg.hostname, seims_cfg.port)
     conn = client.get_conn()

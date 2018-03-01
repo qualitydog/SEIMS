@@ -8,13 +8,13 @@
 from math import sqrt, pow
 from struct import pack, unpack
 
-from numpy import zeros as np_zeros
 from gridfs import GridFS
+from numpy import zeros as np_zeros
 
-from seims.preprocess.db_mongodb import MongoQuery
-from seims.preprocess.text import DBTableNames, RasterMetadata, FieldNames, \
-    DataType, StationFields, DataValueFields
-from seims.preprocess.utility import UTIL_ZERO
+from db_mongodb import MongoQuery
+from text import DBTableNames, RasterMetadata, FieldNames, \
+    DataType, StationFields, DataValueFields, SubbsnStatsName
+from utility import UTIL_ZERO
 
 
 class ImportWeightData(object):
@@ -310,7 +310,7 @@ class ImportWeightData(object):
         n_subbasins = 0  # default is for OpenMP version
         if cfg.cluster:
             subbasin_start_id = 1
-            n_subbasins = MongoQuery.get_subbasin_num(db_model)
+            n_subbasins = MongoQuery.get_init_parameter_value(db_model, SubbsnStatsName.subbsn_num)
 
         for subbsn_id in range(subbasin_start_id, n_subbasins + 1):
             ImportWeightData.climate_itp_weight_thiessen(conn, db_model, subbsn_id,
@@ -320,8 +320,8 @@ class ImportWeightData(object):
 
 def main():
     """TEST CODE"""
-    from seims.preprocess.config import parse_ini_configuration
-    from seims.preprocess.db_mongodb import ConnectMongoDB
+    from config import parse_ini_configuration
+    from db_mongodb import ConnectMongoDB
     seims_cfg = parse_ini_configuration()
     client = ConnectMongoDB(seims_cfg.hostname, seims_cfg.port)
     conn = client.get_conn()

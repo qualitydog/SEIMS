@@ -5,26 +5,33 @@
     @changelog: 16-06-16  first implementation version
                 17-06-22  reformat according to pylint and google style
 """
-from seims.pygeoc.pygeoc.utils.utils import StringClass
+import os
+import sys
+
+from pygeoc.utils import StringClass, UtilClass
+
+if os.path.abspath(os.path.join(sys.path[0], '..')) not in sys.path:
+    sys.path.append(os.path.abspath(os.path.join(sys.path[0], '..')))
+
 # Global variables
 UTIL_ZERO = 1.e-6
 MINI_SLOPE = 0.0001
 DEFAULT_NODATA = -9999.
 SQ2 = 1.4142135623730951
 PI = 3.141592653589793
-LFs = ['\r', '\n', '\r\n']
 
 
-def status_output(status_msg, percent, file_object):
+# LFs = ['\r', '\n', '\r\n']
+
+
+def status_output(status_msg, percent, file_name):
     """Print status and flush to file.
     Args:
         status_msg: status message
         percent: percentage rate of progress
-        file_object: file handler
+        file_name: file handler
     """
-    print ("[Output] %d..., %s" % (percent, status_msg))
-    file_object.write("%d, %s\n" % (percent, status_msg))
-    file_object.flush()
+    UtilClass.writelog(file_name, "[Output] %d..., %s" % (percent, status_msg), 'a')
 
 
 def read_data_items_from_txt(txt_file):
@@ -35,19 +42,28 @@ def read_data_items_from_txt(txt_file):
     Returns:
         2D data array
     """
-    f = open(txt_file)
-    data_items = []
-    for line in f:
-        str_line = line
-        for LF in LFs:
-            if LF in line:
-                str_line = line.split(LF)[0]
-                break
-
-        if str_line != '' and str_line.find('#') < 0:
-            line_list = StringClass.split_string(str_line, ['\t'])
-            if len(line_list) <= 1:
-                line_list = StringClass.split_string(str_line, [','])
-            data_items.append(line_list)
-    f.close()
+    data_items = list()
+    with open(txt_file, 'r') as f:
+        for line in f:
+            str_line = line.strip()
+            if str_line != '' and str_line.find('#') < 0:
+                line_list = StringClass.split_string(str_line, ['\t'])
+                if len(line_list) <= 1:
+                    line_list = StringClass.split_string(str_line, [','])
+                data_items.append(line_list)
     return data_items
+
+
+def sum_outlet_output(rfile):
+    """Sum the output variables in outlet txt file."""
+    data = read_data_items_from_txt(rfile)
+    sum_data = 0.
+    for item in data:
+        item = StringClass.split_string(item[0], ' ', True)
+        if len(item) < 3:
+            continue
+        try:
+            sum_data += float(item[2])
+        except ValueError or Exception:
+            pass
+    return sum_data

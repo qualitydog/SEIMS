@@ -2,32 +2,24 @@
  * \brief Import raster data (full size data include nodata) to MongoDB as GridFS.
  * \change  17-07-02 lj - keep import raster to MongoDB if fails and the max. loop is set to 3.
  */
-#if (defined _DEBUG) && (defined MSVC) && (defined VLD)
+#if (defined _DEBUG) && (defined _MSC_VER) && (defined VLD)
 #include "vld.h"
 #endif /* Run Visual Leak Detector during Debug */
-#include <vector>
-#include <map>
-#include <string>
-#include <iostream>
-#include <cmath>
-#include <sstream>
-#include <fstream>
-#include <cstdlib>
-#include <algorithm>
+
+#include "SubBasin.h"
 
 #include "utilities.h"
 #include "MongoUtil.h"
-#include "clsRasterData.cpp"
-#include "SubBasin.h"
+#include "clsRasterData.h"
 
 using namespace std;
 
-int FindBoundingBox(clsRasterData<int> &rsSubbasin, map<int, SubBasin> &bboxMap) {
-    int nXSize = rsSubbasin.getCols();
-    int nYSize = rsSubbasin.getRows();
+int FindBoundingBox(clsRasterData<int>* rsSubbasin, map<int, SubBasin> &bboxMap) {
+    int nXSize = rsSubbasin->getCols();
+    int nYSize = rsSubbasin->getRows();
 
-    int *pData = rsSubbasin.getRasterDataPointer();
-    int noDataValue = rsSubbasin.getNoDataValue();
+    int *pData = rsSubbasin->getRasterDataPointer();
+    int noDataValue = rsSubbasin->getNoDataValue();
     // find bounding box for each subbasin
     for (int i = 0; i < nYSize; i++) {
         for (int j = 0; j < nXSize; j++) {
@@ -62,19 +54,18 @@ int FindBoundingBox(clsRasterData<int> &rsSubbasin, map<int, SubBasin> &bboxMap)
  * \param[in] gfs MongoDB GridFS object
  * \return True if import successfully, otherwise return false.
  */
-bool DecompositeRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int> &rsSubbasin, const char *dstFile,
-                               mongoc_client_t *conn, mongoc_gridfs_t *gfs) {
+bool DecompositeRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int> *rsSubbasin, const char *dstFile,
+                                mongoc_client_t *conn, mongoc_gridfs_t *gfs) {
     bool flag = true;
-    clsRasterData<float> rs;
-    rs.ReadByGDAL(dstFile, false);
-
-    int nXSize = rs.getCols();
+    clsRasterData<float> *rs = clsRasterData<float>::Init(dstFile, false); // Do not calculate positions data
+    if (nullptr == rs) exit(-1);
+    int nXSize = rs->getCols();
     // int nYSize = rs.getRows();
-    float noDataValue = rs.getNoDataValue();
-    const char *srs = rs.getSRS();
+    float noDataValue = rs->getNoDataValue();
+    const char *srs = rs->getSRS();
     //cout << nXSize << "\t" << nYSize << endl;
-    float *rsData = rs.getRasterDataPointer();
-    int *subbasinData = rsSubbasin.getRasterDataPointer();
+    float *rsData = rs->getRasterDataPointer();
+    int *subbasinData = rsSubbasin->getRasterDataPointer();
 
     map<int, SubBasin>::iterator it;
     string coreName = GetCoreFileName(dstFile);
@@ -107,7 +98,7 @@ bool DecompositeRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int> 
 
         ostringstream remoteFilename;
         remoteFilename << id << "_" << GetUpper(coreName);
-        float cellSize = rs.getCellWidth();
+        float cellSize = rs->getCellWidth();
         MongoGridFS().removeFile(remoteFilename.str(), gfs);
 
         bson_t p = BSON_INITIALIZER;
@@ -116,13 +107,13 @@ bool DecompositeRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int> 
         BSON_APPEND_UTF8(&p, "ID", remoteFilename.str().c_str());
         BSON_APPEND_UTF8(&p, "DESCRIPTION", coreName.c_str());
         BSON_APPEND_DOUBLE(&p, "CELLSIZE", cellSize);
-        BSON_APPEND_DOUBLE(&p, "NODATA_VALUE", rs.getNoDataValue());
+        BSON_APPEND_DOUBLE(&p, "NODATA_VALUE", rs->getNoDataValue());
         BSON_APPEND_DOUBLE(&p, "NCOLS", subXSize);
         BSON_APPEND_DOUBLE(&p, "NROWS", subYSize);
-        BSON_APPEND_DOUBLE(&p, "XLLCENTER", rs.getXllCenter() + subbasin.xMin * cellSize);
-        BSON_APPEND_DOUBLE(&p, "YLLCENTER", rs.getYllCenter() + (rs.getRows() - subbasin.yMax - 1) * cellSize);
-        BSON_APPEND_DOUBLE(&p, "LAYERS", rs.getLayers());
-        BSON_APPEND_DOUBLE(&p, "CELLSNUM", rs.getCellNumber());
+        BSON_APPEND_DOUBLE(&p, "XLLCENTER", rs->getXllCenter() + subbasin.xMin * cellSize);
+        BSON_APPEND_DOUBLE(&p, "YLLCENTER", rs->getYllCenter() + (rs->getRows() - subbasin.yMax - 1) * cellSize);
+        BSON_APPEND_DOUBLE(&p, "LAYERS", rs->getLayers());
+        BSON_APPEND_DOUBLE(&p, "CELLSNUM", subbasin.cellCount);
         BSON_APPEND_UTF8(&p, "SRS", srs);
 
         char *databuf = (char *) subData;
@@ -138,6 +129,7 @@ bool DecompositeRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int> 
         databuf = NULL;
         Release1DArray(subData);
     }
+    delete rs;
     return flag;
 }
 
@@ -151,18 +143,19 @@ bool DecompositeRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int> 
  * \param[in] gfs MongoDB GridFS object
  * \return True if import successfully, otherwise return false.
  */
-bool Decomposite2DRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int> &rsSubbasin, string coreName,
+bool Decomposite2DRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int> *rsSubbasin, string coreName,
                                  vector<string> dstFiles, mongoc_client_t *conn, mongoc_gridfs_t *gfs) {
     bool flag = true;
     int colNum = dstFiles.size();
-    clsRasterData<float> rss(dstFiles, false);
-    int nXSize = rss.getCols();
+    clsRasterData<float> *rss = clsRasterData<float>::Init(dstFiles, false); // Do not calculate positions data
+    if (nullptr == rss) exit(-1);
+    int nXSize = rss->getCols();
     // int nYSize = rss.getRows();
-    float noDataValue = rss.getNoDataValue();
-    const char *srs = rss.getSRS();
+    float noDataValue = rss->getNoDataValue();
+    const char *srs = rss->getSRS();
     ///cout << nXSize << "\t" << nYSize << endl;
-    float **rssData = rss.get2DRasterDataPointer();
-    int *subbasinData = rsSubbasin.getRasterDataPointer();
+    float **rssData = rss->get2DRasterDataPointer();
+    int *subbasinData = rsSubbasin->getRasterDataPointer();
     map<int, SubBasin>::iterator it;
     for (it = bboxMap.begin(); it != bboxMap.end(); it++) {
         int id = it->first;
@@ -174,7 +167,7 @@ bool Decomposite2DRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int
         int subXSize = subbasin.xMax - subbasin.xMin + 1;
         int subYSize = subbasin.yMax - subbasin.yMin + 1;
         int subCellNum = subXSize * subYSize;
-        float *sub2DData = NULL;
+        float *sub2DData = nullptr;
         Initialize1DArray(subCellNum * colNum, sub2DData, noDataValue);
 #pragma omp parallel for
         for (int i = subbasin.yMin; i <= subbasin.yMax; i++) {
@@ -190,7 +183,7 @@ bool Decomposite2DRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int
         }
         ostringstream remoteFilename;
         remoteFilename << id << "_" << GetUpper(coreName);
-        float cellSize = rss.getCellWidth();
+        float cellSize = rss->getCellWidth();
         MongoGridFS().removeFile(remoteFilename.str(), gfs);
 
         bson_t p = BSON_INITIALIZER;
@@ -199,13 +192,13 @@ bool Decomposite2DRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int
         BSON_APPEND_UTF8(&p, "ID", remoteFilename.str().c_str());
         BSON_APPEND_UTF8(&p, "DESCRIPTION", coreName.c_str());
         BSON_APPEND_DOUBLE(&p, "CELLSIZE", cellSize);
-        BSON_APPEND_DOUBLE(&p, "NODATA_VALUE", rss.getNoDataValue());
+        BSON_APPEND_DOUBLE(&p, "NODATA_VALUE", rss->getNoDataValue());
         BSON_APPEND_DOUBLE(&p, "NCOLS", subXSize);
         BSON_APPEND_DOUBLE(&p, "NROWS", subYSize);
-        BSON_APPEND_DOUBLE(&p, "XLLCENTER", rss.getXllCenter() + subbasin.xMin * cellSize);
-        BSON_APPEND_DOUBLE(&p, "YLLCENTER", rss.getYllCenter() + (rss.getRows() - subbasin.yMax - 1) * cellSize);
-        BSON_APPEND_DOUBLE(&p, "LAYERS", rss.getLayers());
-        BSON_APPEND_DOUBLE(&p, "CELLSNUM", rss.getCellNumber());
+        BSON_APPEND_DOUBLE(&p, "XLLCENTER", rss->getXllCenter() + subbasin.xMin * cellSize);
+        BSON_APPEND_DOUBLE(&p, "YLLCENTER", rss->getYllCenter() + (rss->getRows() - subbasin.yMax - 1) * cellSize);
+        BSON_APPEND_DOUBLE(&p, "LAYERS", rss->getLayers());
+        BSON_APPEND_DOUBLE(&p, "CELLSNUM", subbasin.cellCount);
         BSON_APPEND_UTF8(&p, "SRS", srs);
 
         char *databuf = (char *) sub2DData;
@@ -217,12 +210,13 @@ bool Decomposite2DRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int
             break;
         }
         bson_destroy(&p);
-        databuf = NULL;
+        databuf = nullptr;
         Release1DArray(sub2DData);
     }
-    srs = NULL;
-    rssData = NULL;
-    subbasinData = NULL;
+    srs = nullptr;
+    rssData = nullptr;
+    subbasinData = nullptr;
+    delete rss;
     return flag;
 }
 
@@ -234,17 +228,17 @@ bool Decomposite2DRasterToMongoDB(map<int, SubBasin> &bboxMap, clsRasterData<int
  * \param[in] dstFile Input raster full file path
  * \param[in] tmpFolder Folder to store the separated raster data file
  */
-int DecompositeRaster(map<int, SubBasin> &bboxMap, clsRasterData<int> &rsSubbasin, const char *dstFile,
+int DecompositeRaster(map<int, SubBasin> &bboxMap, clsRasterData<int> *rsSubbasin, const char *dstFile,
                       const char *tmpFolder) {
-    clsRasterData<float> rs;
-    rs.ReadByGDAL(dstFile, false);
+    clsRasterData<float>* rs = clsRasterData<float>::Init(dstFile, false);
+    if (nullptr == rs) exit(-1);
 
-    int nXSize = rs.getCols();
-    // int nYSize = rs.getRows();
-    float noDataValue = rs.getNoDataValue();
+    int nXSize = rs->getCols();
+    // int nYSize = rs->getRows();
+    float noDataValue = rs->getNoDataValue();
 
-    float *rsData = rs.getRasterDataPointer();
-    int *subbasinData = rsSubbasin.getRasterDataPointer();
+    float *rsData = rs->getRasterDataPointer();
+    int *subbasinData = rsSubbasin->getRasterDataPointer();
 
     const char *pszFormat = "GTiff";
     GDALDriver *poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
@@ -291,11 +285,11 @@ int DecompositeRaster(map<int, SubBasin> &bboxMap, clsRasterData<int> &rsSubbasi
         poDstBand->SetNoDataValue(noDataValue);
 
         double geoTrans[6];
-        float cellSize = rs.getCellWidth();
-        geoTrans[0] = rs.getXllCenter() + (subbasin.xMin - 0.5f) * cellSize;
+        float cellSize = rs->getCellWidth();
+        geoTrans[0] = rs->getXllCenter() + (subbasin.xMin - 0.5f) * cellSize;
         geoTrans[1] = cellSize;
         geoTrans[2] = 0;
-        geoTrans[3] = rs.getYllCenter() + (rs.getRows() - subbasin.yMin - 0.5f) * cellSize;
+        geoTrans[3] = rs->getYllCenter() + (rs->getRows() - subbasin.yMin - 0.5f) * cellSize;
         geoTrans[4] = 0;
         geoTrans[5] = -cellSize;
         poDstDS->SetGeoTransform(geoTrans);
@@ -303,6 +297,7 @@ int DecompositeRaster(map<int, SubBasin> &bboxMap, clsRasterData<int> &rsSubbasi
         CPLFree(subData);
         GDALClose(poDstDS);
     }
+    delete rs;
     return 0;
 }
 
@@ -317,17 +312,13 @@ int main(int argc, char **argv) {
     /// set default OpenMP thread number to improve compute efficiency
     SetDefaultOpenMPThread();
 
-    //const char* subbasinFile = "F:\\modeldev\\integrated\\storm_model\\Debug\\model_lyg_10m\\mask.asc";
-    //const char* folder = "F:\\modeldev\\integrated\\storm_model\\Debug\\model_lyg_10m";
-    //const char* modelName = "model_lyg_10m";
-    //const char* hostname = "192.168.5.195";
     const char *subbasinFile = argv[1];
     const char *folder = argv[2];
     const char *modelName = argv[3];
     const char *gridFSName = argv[4];
     const char *hostname = argv[5];
     int port = atoi(argv[6]);
-    const char *outTifFolder = NULL;
+    const char *outTifFolder = nullptr;
 
     if (argc >= 8) {
         outTifFolder = argv[7];
@@ -347,7 +338,7 @@ int main(int argc, char **argv) {
     vector<string> array1DFiles;
     map<string, vector<string> > array2DFiles;
     map<string, vector<string> >::iterator array2DIter;
-    for (vector<string>::iterator it = dstFiles.begin(); it != dstFiles.end(); it++) {
+    for (auto it = dstFiles.begin(); it != dstFiles.end(); it++) {
         string tmpCoreName = GetCoreFileName(*it);
         coreFileNames.push_back(tmpCoreName);
         vector<string> tokens = SplitString(tmpCoreName, '_');
@@ -390,7 +381,8 @@ int main(int argc, char **argv) {
 
     //////////////////////////////////////////////////////////////////////////
     // read the subbasin file, and find the bounding box of each subbasin
-    clsRasterData<int> rsSubbasin(subbasinFile, false);
+    clsRasterData<int>* rsSubbasin = clsRasterData<int>::Init(subbasinFile, false);
+    if (nullptr == rsSubbasin) exit(-1);
     map<int, SubBasin> bboxMap;
     FindBoundingBox(rsSubbasin, bboxMap);
 
@@ -398,16 +390,17 @@ int main(int argc, char **argv) {
     /// loop to process the destination files
 
     /// connect to MongoDB
-    MongoClient client = MongoClient(hostname, port);
-    mongoc_client_t *conn = client.getConn();
-    mongoc_gridfs_t *gfs = client.getGridFS(string(modelName), string(gridFSName));
+    MongoClient* client = MongoClient::Init(hostname, port);
+    if (nullptr == client) exit(-1);
+    mongoc_client_t *conn = client->getConn();
+    mongoc_gridfs_t *gfs = client->getGridFS(string(modelName), string(gridFSName));
 
     cout << "Importing spatial data to MongoDB...\n";
     for (array2DIter = array2DFiles.begin(); array2DIter != array2DFiles.end(); array2DIter++) {
         vector<string> tmpFileNames = array2DIter->second;
         for (vector<string>::iterator it = tmpFileNames.begin(); it != tmpFileNames.end(); it++) {
             cout << "\t" << *it << endl;
-            if (outTifFolder != NULL) {
+            if (nullptr != outTifFolder) {
                 DecompositeRaster(bboxMap, rsSubbasin, it->c_str(), outTifFolder);
             }
         }
@@ -429,7 +422,7 @@ int main(int argc, char **argv) {
     }
     for (size_t i = 0; i < array1DFiles.size(); ++i) {
         cout << "\t" << array1DFiles[i] << endl;
-        if (outTifFolder != NULL) {
+        if (outTifFolder != nullptr) {
             DecompositeRaster(bboxMap, rsSubbasin, array1DFiles[i].c_str(), outTifFolder);
         }
         int loop = 1;
@@ -447,5 +440,8 @@ int main(int argc, char **argv) {
             exit(EXIT_FAILURE);
         }
     }
+    /// release
     mongoc_gridfs_destroy(gfs);
+    delete client;
+    delete rsSubbasin;
 }
