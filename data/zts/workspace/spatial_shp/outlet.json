@@ -1,0 +1,8 @@
+{
+"type": "FeatureCollection",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+                                                                                
+"features": [
+{ "type": "Feature", "properties": { "OBJECTID": 1, "Name": "outlet", "Lon": 119.392039, "Lat": 31.222733, "X": 40442072.019900, "Y": 3455828.354400, "Elev": "29.2", "ID": 0, "Dist_moved": 0 }, "geometry": { "type": "Point", "coordinates": [ 119.38940073246785, 31.225629948762396 ] } }
+]
+}

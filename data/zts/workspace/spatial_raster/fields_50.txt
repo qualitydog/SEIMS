@@ -1,0 +1,4 @@
+ Relationship of the fields ---- field number:
+ 1
+ FID  downstreamFID  Area(ha)  LanduseID  Degree
+ 1	0	3.8125	7	1
